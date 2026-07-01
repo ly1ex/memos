@@ -1,0 +1,23 @@
+name = "memos-cloudflare-worker"
+main = "src/index.ts"
+compatibility_date = "2026-07-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[vars]
+CORS_ORIGINS = "http://localhost:3001,http://localhost:8787"
+CLERK_AUTHORIZED_PARTIES = "http://localhost:3001,http://localhost:8787"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "memos-cloudflare"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "ATTACHMENTS"
+bucket_name = "memos-attachments"
+
+[triggers]
+crons = ["*/15 * * * *"]
+
