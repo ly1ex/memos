@@ -1,10 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowUpIcon } from "lucide-react";
-import { type ReactElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactElement, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { userApi } from "@/api/client";
+import type { Memo } from "@/api/types";
+import { State } from "@/api/types";
 import { MentionResolutionProvider } from "@/components/MemoContent/MentionResolutionContext";
 import { deriveDefaultCreateTimeFromFilters } from "@/components/MemoEditor/utils/deriveDefaultCreateTime";
 import { Button } from "@/components/ui/button";
-import { userServiceClient } from "@/connect";
 import { useMemoFilterContext } from "@/contexts/MemoFilterContext";
 import { useNewMemo } from "@/contexts/NewMemoContext";
 import { DEFAULT_LIST_MEMOS_PAGE_SIZE, SKELETON_LOADING_DELAY_MS } from "@/helpers/consts";
@@ -12,8 +14,7 @@ import { useDelayedFlag } from "@/hooks/useDelayedFlag";
 import { useInfiniteMemos } from "@/hooks/useMemoQueries";
 import { hoistMemoToFront } from "@/hooks/useMemoSorting";
 import { userKeys } from "@/hooks/useUserQueries";
-import { State } from "@/types/proto/api/v1/common_pb";
-import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
+import { cn } from "@/lib/utils";
 import { useTranslate } from "@/utils/i18n";
 import MemoEditor from "../MemoEditor";
 import MemoFilters from "../MemoFilters";
@@ -31,6 +32,11 @@ interface Props {
   enabled?: boolean;
   /** When true, render the inline MemoEditor above the list (e.g. on the Home page). */
   showMemoEditor?: boolean;
+  className?: string;
+  listClassName?: string;
+  editorClassName?: string;
+  filtersClassName?: string;
+  editorHeader?: ReactNode;
 }
 
 function useAutoFetchWhenNotScrollable({
@@ -128,7 +134,7 @@ const PagedMemoList = (props: Props) => {
       void queryClient.prefetchQuery({
         queryKey: userKeys.detail(creator),
         queryFn: async () => {
-          const user = await userServiceClient.getUser({ name: creator });
+          const user = await userApi.getUser({ name: creator });
           return user;
         },
         staleTime: 1000 * 60 * 5,
@@ -161,7 +167,7 @@ const PagedMemoList = (props: Props) => {
 
   const children = (
     <MentionResolutionProvider contents={sortedMemoList.map((memo) => memo.content)}>
-      <div className="flex flex-col justify-start w-full max-w-2xl mx-auto">
+      <div className={cn("flex flex-col justify-start w-full max-w-2xl mx-auto", props.className)}>
         {/* During initial load, show the skeleton only after the delay; render nothing before then to avoid a flash. */}
         {isLoading ? (
           showSkeleton ? (
@@ -171,14 +177,17 @@ const PagedMemoList = (props: Props) => {
           <>
             {showMemoEditor ? (
               <MemoEditor
-                className="mb-2"
+                className={cn("mb-2", props.editorClassName)}
+                header={props.editorHeader}
                 cacheKey="home-memo-editor"
                 placeholder={t("editor.any-thoughts")}
                 defaultCreateTime={defaultCreateTime}
               />
             ) : null}
-            <MemoFilters />
-            {sortedMemoList.map((memo) => props.renderer(memo))}
+            <div className={props.filtersClassName}>
+              <MemoFilters />
+            </div>
+            <div className={cn("w-full", props.listClassName)}>{sortedMemoList.map((memo) => props.renderer(memo))}</div>
 
             {/* Loading indicator for pagination */}
             {isFetchingNextPage && <Skeleton showCreator={props.showCreator} count={2} />}

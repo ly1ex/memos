@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import MobileHeader from "@/components/MobileHeader";
+import { User_Role } from "@/api/types";
 import SectionMenuItem from "@/components/Settings/SectionMenuItem";
 import {
   DEFAULT_SETTING_SECTION,
@@ -9,11 +9,11 @@ import {
   type SettingSectionDefinition,
   type SettingSectionKey,
 } from "@/components/Settings/settingSections";
+import UserAvatar from "@/components/UserAvatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useInstance } from "@/contexts/InstanceContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useMediaQuery from "@/hooks/useMediaQuery";
-import { User_Role } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
 const GITHUB_COMMIT_URL_PREFIX = "https://github.com/usememos/memos/commit/";
@@ -43,8 +43,13 @@ const Setting = () => {
 
   useEffect(() => {
     const hash = location.hash.slice(1);
-    const nextSection = isSettingSectionKey(hash) && visibleSectionKeys.has(hash) ? hash : DEFAULT_SETTING_SECTION;
-    setSelectedSection(nextSection);
+    if (!hash) {
+      setSelectedSection(DEFAULT_SETTING_SECTION);
+      return;
+    }
+    if (isSettingSectionKey(hash) && visibleSectionKeys.has(hash)) {
+      setSelectedSection(hash);
+    }
   }, [location.hash, visibleSectionKeys]);
 
   useEffect(() => {
@@ -77,57 +82,78 @@ const Setting = () => {
     ));
 
   return (
-    <section className="@container w-full max-w-5xl min-h-full flex flex-col justify-start items-start sm:pt-3 md:pt-6 pb-8">
-      {!sm && <MobileHeader />}
-      <div className="w-full px-4 sm:px-6">
-        <div className="w-full border border-border flex flex-row justify-start items-start px-4 py-3 rounded-xl bg-background text-muted-foreground">
-          {sm && (
-            <div className="flex flex-col justify-start items-start w-40 h-auto shrink-0 py-2">
-              <span className="text-sm mt-0.5 pl-3 font-mono select-none text-muted-foreground">{t("common.basic")}</span>
-              <div className="w-full flex flex-col justify-start items-start mt-1">{renderSectionMenuItems(sectionGroups.basic)}</div>
-              {isHost && (
-                <>
-                  <span className="text-sm mt-4 pl-3 font-mono select-none text-muted-foreground">{t("common.admin")}</span>
-                  <div className="w-full flex flex-col justify-start items-start mt-1">
-                    {renderSectionMenuItems(sectionGroups.admin)}
-                    <div className="px-3 mt-2 opacity-70 text-sm leading-5">
-                      {t("setting.version")}: {profile.version}
-                      {profile.commit && (
-                        <span className="block font-mono break-all">
-                          Commit:{" "}
-                          {commitUrl ? (
-                            <a className="underline hover:text-foreground" href={commitUrl} target="_blank" rel="noreferrer">
-                              {profile.commit}
-                            </a>
-                          ) : (
-                            profile.commit
-                          )}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
+    <section className="lumina-page lumina-sanctuary-page">
+      <div className="lumina-sanctuary-card">
+        <div className="lumina-sanctuary-heading">
+          <h1>{t("lumina.sanctuary-title")}</h1>
+          <p>{t("lumina.sanctuary-description")}</p>
+        </div>
+
+        <div className="lumina-sanctuary-section">
+          <span className="lumina-section-kicker">{t("lumina.identity")}</span>
+          <div className="lumina-identity-row">
+            <UserAvatar className="size-16 rounded-full border border-border/70 shadow-sm" avatarUrl={user?.avatarUrl} />
+            <div className="min-w-0">
+              <p className="truncate text-xl font-medium text-foreground">{user?.displayName || user?.username}</p>
+              <p className="truncate font-mono text-sm text-muted-foreground">@{user?.username}</p>
             </div>
-          )}
-          <div className="w-full grow sm:pl-4 overflow-x-auto">
-            {!sm && (
-              <div className="w-auto inline-block my-2">
-                <Select value={selectedSection} onValueChange={(value) => handleSectionSelectorItemClick(value as SettingSectionKey)}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder={t("setting.select-section")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sectionGroups.all.map((section) => (
-                      <SelectItem key={section.key} value={section.key}>
-                        {t(section.labelKey)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <span className="lumina-role-pill ml-auto shrink-0">{isHost ? t("common.admin") : t("lumina.member")}</span>
+          </div>
+        </div>
+
+        <div className="lumina-sanctuary-section">
+          <span className="lumina-section-kicker">{t("lumina.data-boundary")}</span>
+          <div className="lumina-settings-layout">
+            {sm && (
+              <aside className="lumina-settings-nav">
+                <span className="lumina-settings-nav-title">{t("common.basic")}</span>
+                <div className="flex w-full flex-col items-start gap-1">{renderSectionMenuItems(sectionGroups.basic)}</div>
+                {isHost && (
+                  <>
+                    <span className="lumina-settings-nav-title mt-5">{t("common.admin")}</span>
+                    <div className="flex w-full flex-col items-start gap-1">
+                      {renderSectionMenuItems(sectionGroups.admin)}
+                      <div className="mt-3 px-3 text-sm leading-5 text-muted-foreground/80">
+                        {t("setting.version")}: {profile.version}
+                        {profile.commit && (
+                          <span className="block break-all font-mono">
+                            Commit:{" "}
+                            {commitUrl ? (
+                              <a className="underline hover:text-foreground" href={commitUrl} target="_blank" rel="noreferrer">
+                                {profile.commit}
+                              </a>
+                            ) : (
+                              profile.commit
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </aside>
             )}
-            <ActiveSection />
+            <div className="min-w-0 grow overflow-x-auto">
+              {!sm && (
+                <div className="mb-5 inline-block w-full">
+                  <Select value={selectedSection} onValueChange={(value) => handleSectionSelectorItemClick(value as SettingSectionKey)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={t("setting.select-section")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sectionGroups.all.map((section) => (
+                        <SelectItem key={section.key} value={section.key}>
+                          {t(section.labelKey)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="lumina-settings-content">
+                <ActiveSection />
+              </div>
+            </div>
           </div>
         </div>
       </div>

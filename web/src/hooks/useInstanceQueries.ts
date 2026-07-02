@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { instanceServiceClient } from "@/connect";
-import { InstanceSetting, InstanceSetting_Key } from "@/types/proto/api/v1/instance_service_pb";
+import { instanceApi } from "@/api/client";
+import { InstanceSetting, InstanceSetting_Key } from "@/api/types";
 
 // Query keys factory
 export const instanceKeys = {
@@ -9,7 +9,6 @@ export const instanceKeys = {
   settings: () => [...instanceKeys.all, "settings"] as const,
   setting: (key: InstanceSetting_Key) => [...instanceKeys.settings(), key] as const,
   settingsBatch: (keys: InstanceSetting_Key[]) => [...instanceKeys.settings(), "batch", ...keys] as const,
-  stats: () => [...instanceKeys.all, "stats"] as const,
 };
 
 // Build setting name from key
@@ -18,21 +17,12 @@ const buildInstanceSettingName = (key: InstanceSetting_Key): string => {
   return `instance/settings/${keyName}`;
 };
 
-// Hook to fetch instance resource statistics. Admin only on the server side.
-export function useInstanceStats() {
-  return useQuery({
-    queryKey: instanceKeys.stats(),
-    queryFn: () => instanceServiceClient.getInstanceStats({}),
-    staleTime: 60_000, // 60s — matches server-side cache TTL
-  });
-}
-
 // Hook to fetch instance profile
 export function useInstanceProfile() {
   return useQuery({
     queryKey: instanceKeys.profile(),
     queryFn: async () => {
-      const profile = await instanceServiceClient.getInstanceProfile({});
+      const profile = await instanceApi.getInstanceProfile({});
       return profile;
     },
     staleTime: 1000 * 60 * 10, // 10 minutes - instance profile rarely changes
@@ -44,7 +34,7 @@ export function useInstanceSetting(key: InstanceSetting_Key) {
   return useQuery({
     queryKey: instanceKeys.setting(key),
     queryFn: async () => {
-      const setting = await instanceServiceClient.getInstanceSetting({
+      const setting = await instanceApi.getInstanceSetting({
         name: buildInstanceSettingName(key),
       });
       return setting;
@@ -58,7 +48,7 @@ export function useInstanceSettings(keys: InstanceSetting_Key[]) {
   return useQuery({
     queryKey: instanceKeys.settingsBatch(keys),
     queryFn: async () => {
-      const response = await instanceServiceClient.batchGetInstanceSettings({
+      const response = await instanceApi.batchGetInstanceSettings({
         names: keys.map(buildInstanceSettingName),
       });
       return response.settings;
@@ -73,7 +63,7 @@ export function useUpdateInstanceSetting() {
 
   return useMutation({
     mutationFn: async (setting: InstanceSetting) => {
-      await instanceServiceClient.updateInstanceSetting({ setting });
+      await instanceApi.updateInstanceSetting({ setting });
       return setting;
     },
     onSuccess: (setting) => {

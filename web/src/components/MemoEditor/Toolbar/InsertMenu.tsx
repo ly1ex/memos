@@ -12,6 +12,7 @@ import {
   PlusIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { MemoRelation } from "@/api/types";
 import { LinkMemoDialog, LocationDialog } from "@/components/MemoMetadata";
 import type { MapPoint } from "@/components/map/types";
 import { useReverseGeocoding } from "@/components/map/useReverseGeocoding";
@@ -28,7 +29,6 @@ import {
   useDropdownMenuSubHoverDelay,
 } from "@/components/ui/dropdown-menu";
 import { useDebouncedEffect } from "@/hooks";
-import type { MemoRelation } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import { useFileUpload, useLinkMemo, useLocation } from "../hooks";
 import { useEditorContext, useEditorSelector } from "../state";

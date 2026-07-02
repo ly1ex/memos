@@ -1,7 +1,8 @@
-import { create } from "@bufbuild/protobuf";
 import { LoaderCircleIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
+import { attachmentApi } from "@/api/client";
+import { createMessage, ListAttachmentsRequestSchema } from "@/api/types";
 import {
   AttachmentAudioRows,
   AttachmentDocumentRows,
@@ -17,14 +18,12 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import MobileHeader from "@/components/MobileHeader";
 import PreviewImageDialog from "@/components/PreviewImageDialog";
 import { Button } from "@/components/ui/button";
-import { attachmentServiceClient } from "@/connect";
 import { type AttachmentLibraryStats, type AttachmentLibraryTab, useAttachmentLibrary } from "@/hooks/useAttachmentLibrary";
 import { useBatchDeleteAttachments } from "@/hooks/useAttachmentQueries";
 import useDialog from "@/hooks/useDialog";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import i18n from "@/i18n";
 import { handleError } from "@/lib/error";
-import { ListAttachmentsRequestSchema } from "@/types/proto/api/v1/attachment_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
 const UNUSED_PAGE_SIZE = 1000;
@@ -51,8 +50,8 @@ const listUnusedAttachmentNames = async () => {
   let pageToken = "";
 
   do {
-    const response = await attachmentServiceClient.listAttachments(
-      create(ListAttachmentsRequestSchema, {
+    const response = await attachmentApi.listAttachments(
+      createMessage(ListAttachmentsRequestSchema, {
         filter: "memo_id == null",
         pageSize: UNUSED_PAGE_SIZE,
         pageToken,

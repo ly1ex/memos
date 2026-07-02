@@ -1,8 +1,8 @@
 import { LinkIcon, XIcon } from "lucide-react";
 import type { FC } from "react";
 import { useMemo } from "react";
+import type { MemoRelation } from "@/api/types";
 import MetadataSection from "@/components/MemoMetadata/MetadataSection";
-import type { MemoRelation } from "@/types/proto/api/v1/memo_service_pb";
 import RelationCard from "./RelationCard";
 import { getEditorReferenceRelations } from "./relationHelpers";
 import { useResolvedRelationMemos } from "./useResolvedRelationMemos";

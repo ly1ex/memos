@@ -50,9 +50,9 @@ export const RequireAuthRoute = () => {
  * Guard for guest-only routes (sign-in and sign-up). Already-authenticated users
  * are redirected to the requested `redirect` target (when safe) or to `/`.
  *
- * The OAuth callback route (`/auth/callback`) intentionally opts out of this guard:
- * an authenticated session in another tab must not prevent the callback from
- * consuming its one-time OAuth state and completing the in-flight sign-in.
+ * Auth callback routes intentionally opt out of this guard: an authenticated
+ * session in another tab must not prevent the callback from consuming its
+ * one-time auth state and completing the in-flight sign-in.
  */
 export const RequireGuestRoute = () => {
   const currentUser = useCurrentUser();

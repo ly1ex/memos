@@ -1,7 +1,6 @@
-import { create } from "@bufbuild/protobuf";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { createMessage, Location, LocationSchema } from "@/api/types";
 import type { MapPoint } from "@/components/map/types";
-import { Location, LocationSchema } from "@/types/proto/api/v1/memo_service_pb";
 import { LocationState } from "../types/insertMenu";
 
 export const useLocation = (initialLocation?: Location) => {
@@ -73,7 +72,7 @@ export const useLocation = (initialLocation?: Location) => {
     if (!position || !placeholder.trim()) {
       return undefined;
     }
-    return create(LocationSchema, {
+    return createMessage(LocationSchema, {
       latitude: position.lat,
       longitude: position.lng,
       placeholder,

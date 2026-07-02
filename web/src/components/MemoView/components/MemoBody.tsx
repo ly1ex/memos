@@ -1,6 +1,6 @@
+import { MemoRelation_Type } from "@/api/types";
 import { AttachmentListView, LocationDisplayView, RelationListView } from "@/components/MemoMetadata";
 import { cn } from "@/lib/utils";
-import { MemoRelation_Type } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import MemoContent from "../../MemoContent";
 import { MemoReactionListView } from "../../MemoReactionListView";

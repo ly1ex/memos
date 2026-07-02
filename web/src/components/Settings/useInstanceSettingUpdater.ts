@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { toast } from "react-hot-toast";
+import { InstanceSetting, InstanceSetting_Key } from "@/api/types";
 import { useInstance } from "@/contexts/InstanceContext";
 import { handleError } from "@/lib/error";
-import { InstanceSetting, InstanceSetting_Key } from "@/types/proto/api/v1/instance_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
 interface SaveInstanceSettingOptions {

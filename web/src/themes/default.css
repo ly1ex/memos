@@ -1,44 +1,44 @@
 :root {
-  --background: oklch(0.9818 0.0054 95.0986);
-  --foreground: oklch(0.2438 0.0269 95.7226);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.1908 0.002 106.5859);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2671 0.0196 98.939);
-  --primary: oklch(0.45 0.08 250);
-  --primary-foreground: oklch(0.9818 0.0054 95.0986);
-  --secondary: oklch(0.9245 0.0138 92.9892);
-  --secondary-foreground: oklch(0.4334 0.0177 98.6048);
-  --muted: oklch(0.9341 0.0153 90.239);
-  --muted-foreground: oklch(0.5559 0.0075 97.4233);
-  --accent: oklch(0.9245 0.0138 92.9892);
-  --accent-foreground: oklch(0.2671 0.0196 98.939);
-  --destructive: oklch(0.5 0.12 25);
-  --destructive-foreground: oklch(1 0 0);
-  --success: oklch(0.55 0.13 150);
-  --success-foreground: oklch(0.98 0.01 150);
-  --warning: oklch(0.62 0.12 70);
-  --warning-foreground: oklch(0.25 0.03 75);
-  --border: oklch(0.8847 0.0069 97.3627);
-  --input: oklch(0.7621 0.0156 98.3528);
-  --ring: oklch(0.45 0.08 250);
-  --sidebar: oklch(0.9663 0.008 98.8792);
-  --sidebar-foreground: oklch(0.359 0.0051 106.6524);
-  --sidebar-accent: oklch(0.9245 0.0138 92.9892);
-  --sidebar-accent-foreground: oklch(0.325 0 0);
+  --background: #f9f9f9;
+  --foreground: #212121;
+  --card: #ffffff;
+  --card-foreground: #212121;
+  --popover: rgba(255, 255, 255, 0.88);
+  --popover-foreground: #212121;
+  --primary: #17171c;
+  --primary-foreground: #ffffff;
+  --secondary: #e8e8e8;
+  --secondary-foreground: #212121;
+  --muted: #eeeeee;
+  --muted-foreground: #75758a;
+  --accent: #f3f3f4;
+  --accent-foreground: #212121;
+  --destructive: #b30000;
+  --destructive-foreground: #ffffff;
+  --success: #35675d;
+  --success-foreground: #ffffff;
+  --warning: #9a6a20;
+  --warning-foreground: #212121;
+  --border: #d9d9dd;
+  --input: #c8c5cb;
+  --ring: #4c6ee6;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #616161;
+  --sidebar-accent: #f3f3f4;
+  --sidebar-accent-foreground: #212121;
   --font-sans:
-    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+    sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --radius: 0.5rem;
-  --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-  --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-  --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
-  --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+  --shadow-xs: 0 1px 2px rgb(23 23 28 / 0.04);
+  --shadow-sm: 0 6px 18px rgb(23 23 28 / 0.05);
+  --shadow: 0 10px 30px rgb(23 23 28 / 0.06);
+  --shadow-md: 0 14px 36px rgb(23 23 28 / 0.07);
+  --shadow-lg: 0 18px 48px rgb(23 23 28 / 0.08);
+  --shadow-xl: 0 24px 64px rgb(23 23 28 / 0.1);
+  --shadow-2xl: 0 32px 80px rgb(23 23 28 / 0.14);
 }
 
 /* Tailwind v4 token mappings — compiled once at build time, shared by all themes.

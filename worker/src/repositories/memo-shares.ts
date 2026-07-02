@@ -6,6 +6,7 @@ import type { Memo } from "./memos";
 export interface MemoShare {
   id: number;
   memoId: number;
+  memoUid?: string;
   creatorId: number;
   shareId: string;
   expiresTs?: number;
@@ -26,6 +27,7 @@ interface MemoShareRow {
 interface MemoShareWithMemoRow extends MemoShareRow {
   memoUid: string;
   memoCreatorId: number;
+  memoCreatorUsername: string | null;
   content: string;
   visibility: "PUBLIC" | "PROTECTED" | "PRIVATE";
   rowStatus: "NORMAL" | "ARCHIVED";
@@ -129,6 +131,7 @@ export async function getSharedMemo(db: D1Database, shareId: string): Promise<{ 
           share.updated_ts AS updatedTs,
           memo.uid AS memoUid,
           memo.creator_id AS memoCreatorId,
+          (SELECT username FROM "user" WHERE "user".id = memo.creator_id) AS memoCreatorUsername,
           memo.content,
           memo.visibility,
           memo.row_status AS rowStatus,
@@ -160,6 +163,7 @@ export async function getSharedMemo(db: D1Database, shareId: string): Promise<{ 
       id: row.memoId,
       uid: row.memoUid,
       creatorId: row.memoCreatorId,
+      creatorUsername: row.memoCreatorUsername ?? undefined,
       content: row.content,
       visibility: row.visibility,
       rowStatus: row.rowStatus,
@@ -172,9 +176,11 @@ export async function getSharedMemo(db: D1Database, shareId: string): Promise<{ 
 }
 
 function toMemoShare(row: MemoShareRow): MemoShare {
+  const memoUid = (row as Partial<MemoShareWithMemoRow>).memoUid;
   return {
     id: row.id,
     memoId: row.memoId,
+    memoUid: typeof memoUid === "string" ? memoUid : undefined,
     creatorId: row.creatorId,
     shareId: row.shareId,
     expiresTs: row.expiresTs ?? undefined,
@@ -190,4 +196,3 @@ function parsePayload(value: string): unknown {
     return {};
   }
 }
-

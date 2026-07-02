@@ -1,3 +1,4 @@
+import { useClerk } from "@clerk/react";
 import {
   ArchiveIcon,
   CheckIcon,
@@ -8,7 +9,9 @@ import {
   SettingsIcon,
   SquareUserIcon,
   User2Icon,
+  UserCogIcon,
 } from "lucide-react";
+import { clerkAppearance, isClerkEnabled } from "@/clerk-auth";
 import { useAuth } from "@/contexts/AuthContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useSSEConnectionStatus } from "@/hooks/useLiveMemoRefresh";
@@ -24,6 +27,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -133,11 +137,13 @@ const UserMenu = (props: Props) => {
           )}
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
+      <DropdownMenuContent align="end" sideOffset={10} className="lumina-user-menu w-56">
         <DropdownMenuItem onClick={() => navigateTo(`/u/${encodeURIComponent(currentUser?.username ?? "")}`)}>
           <SquareUserIcon className="size-4 text-muted-foreground" />
-          {t("common.profile")}
+          {t("common.my")}
         </DropdownMenuItem>
+        {isClerkEnabled && <ClerkAccountMenuItem />}
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigateTo(Routes.ARCHIVED)}>
           <ArchiveIcon className="size-4 text-muted-foreground" />
           {t("common.archived")}
@@ -151,7 +157,7 @@ const UserMenu = (props: Props) => {
             <GlobeIcon className="size-4 text-muted-foreground" />
             {t("common.language")}
           </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="max-h-[min(24rem,var(--radix-dropdown-menu-content-available-height))] overflow-y-auto p-0">
+          <DropdownMenuSubContent className="lumina-user-submenu max-h-[min(24rem,var(--radix-dropdown-menu-content-available-height))] overflow-y-auto p-0">
             <LocaleSearchList value={currentLocale} onChange={handleLocaleChange} className="w-64" />
           </DropdownMenuSubContent>
         </DropdownMenuSub>
@@ -160,7 +166,7 @@ const UserMenu = (props: Props) => {
             <PaletteIcon className="size-4 text-muted-foreground" />
             {t("setting.preference.theme")}
           </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
+          <DropdownMenuSubContent className="lumina-user-submenu">
             {THEME_OPTIONS.map((option) => (
               <DropdownMenuItem key={option.value} onClick={() => handleThemeChange(option.value)}>
                 {currentTheme === option.value && <CheckIcon className="w-4 h-auto" />}
@@ -180,6 +186,18 @@ const UserMenu = (props: Props) => {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+};
+
+const ClerkAccountMenuItem = () => {
+  const t = useTranslate();
+  const clerk = useClerk();
+
+  return (
+    <DropdownMenuItem onClick={() => clerk.openUserProfile({ appearance: clerkAppearance })}>
+      <UserCogIcon className="size-4 text-muted-foreground" />
+      {t("common.account")}
+    </DropdownMenuItem>
   );
 };
 

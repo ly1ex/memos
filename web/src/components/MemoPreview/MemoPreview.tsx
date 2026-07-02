@@ -1,10 +1,8 @@
-import { create } from "@bufbuild/protobuf";
 import { FileIcon } from "lucide-react";
+import type { Attachment, User } from "@/api/types";
+import { createMessage, MemoSchema } from "@/api/types";
 import { extractMemoIdFromName } from "@/helpers/resource-names";
 import { cn } from "@/lib/utils";
-import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
-import { MemoSchema } from "@/types/proto/api/v1/memo_service_pb";
-import type { User } from "@/types/proto/api/v1/user_service_pb";
 import { getAttachmentType, isMotionAttachment } from "@/utils/attachment";
 import { buildAttachmentVisualItems, countLogicalAttachmentItems } from "@/utils/media-item";
 import MemoContent from "../MemoContent";
@@ -23,7 +21,7 @@ interface MemoPreviewProps {
 }
 
 const STUB_CONTEXT: MemoViewContextValue = {
-  memo: create(MemoSchema),
+  memo: createMessage(MemoSchema),
   creator: undefined,
   currentUser: undefined,
   parentPage: "/",

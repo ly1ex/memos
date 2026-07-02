@@ -1,14 +1,13 @@
-import { create } from "@bufbuild/protobuf";
-import { FieldMaskSchema } from "@bufbuild/protobuf/wkt";
 import copy from "copy-to-clipboard";
 import { CheckIcon, CopyIcon, EyeIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import { userApi } from "@/api/client";
+import { createMessage, FieldMaskSchema } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { userServiceClient } from "@/connect";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useLoading from "@/hooks/useLoading";
 import { handleError } from "@/lib/error";
@@ -40,7 +39,7 @@ function CreateWebhookDialog({ open, onOpenChange, webhookName, onSuccess }: Pro
 
   useEffect(() => {
     if (webhookName && currentUser) {
-      userServiceClient
+      userApi
         .listUserWebhooks({
           parent: currentUser.name,
         })
@@ -82,7 +81,7 @@ function CreateWebhookDialog({ open, onOpenChange, webhookName, onSuccess }: Pro
     if (!webhookName) return;
     try {
       secretState.setLoading();
-      const { signingSecret } = await userServiceClient.getUserWebhookSigningSecret({ name: webhookName });
+      const { signingSecret } = await userApi.getUserWebhookSigningSecret({ name: webhookName });
       setRevealedSecret(signingSecret);
       secretState.setFinish();
     } catch (error: unknown) {
@@ -98,9 +97,9 @@ function CreateWebhookDialog({ open, onOpenChange, webhookName, onSuccess }: Pro
     const secret = "whsec_" + btoa(String.fromCharCode(...bytes));
     try {
       secretState.setLoading();
-      await userServiceClient.updateUserWebhook({
+      await userApi.updateUserWebhook({
         webhook: { name: webhookName, signingSecret: secret },
-        updateMask: create(FieldMaskSchema, { paths: ["signing_secret"] }),
+        updateMask: createMessage(FieldMaskSchema, { paths: ["signing_secret"] }),
       });
       setHasExistingSecret(true);
       setRevealedSecret(secret);
@@ -134,13 +133,13 @@ function CreateWebhookDialog({ open, onOpenChange, webhookName, onSuccess }: Pro
       requestState.setLoading();
       if (isCreating) {
         // The signing secret is generated server-side; reveal it once so the user can copy it without reopening.
-        const created = await userServiceClient.createUserWebhook({
+        const created = await userApi.createUserWebhook({
           parent: currentUser.name,
           webhook: { displayName: state.displayName, url: state.url },
         });
         let secret: string | undefined;
         try {
-          const response = await userServiceClient.getUserWebhookSigningSecret({ name: created.name });
+          const response = await userApi.getUserWebhookSigningSecret({ name: created.name });
           secret = response.signingSecret;
         } catch {
           // Reveal failed — the secret is still set and can be revealed later from the edit dialog.
@@ -155,9 +154,9 @@ function CreateWebhookDialog({ open, onOpenChange, webhookName, onSuccess }: Pro
         return;
       }
 
-      await userServiceClient.updateUserWebhook({
+      await userApi.updateUserWebhook({
         webhook: { name: webhookName, displayName: state.displayName, url: state.url },
-        updateMask: create(FieldMaskSchema, { paths: ["display_name", "url"] }),
+        updateMask: createMessage(FieldMaskSchema, { paths: ["display_name", "url"] }),
       });
       onSuccess?.();
       onOpenChange(false);

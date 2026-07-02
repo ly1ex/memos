@@ -1,12 +1,10 @@
-import { create } from "@bufbuild/protobuf";
-import { FieldMaskSchema, timestampDate } from "@bufbuild/protobuf/wkt";
 import { AtSignIcon, CheckIcon, MessageSquareIcon, TrashIcon, XIcon } from "lucide-react";
 import toast from "react-hot-toast";
+import { userApi } from "@/api/client";
+import { createMessage, FieldMaskSchema, timestampDate, UserNotification, UserNotification_Status } from "@/api/types";
 import UserAvatar from "@/components/UserAvatar";
-import { userServiceClient } from "@/connect";
 import useNavigateTo from "@/hooks/useNavigateTo";
 import { cn } from "@/lib/utils";
-import { UserNotification, UserNotification_Status } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
 interface Props {
@@ -20,12 +18,12 @@ function MemoMentionMessage({ notification }: Props) {
   const sender = notification.senderUser;
 
   const handleArchiveMessage = async (silence = false) => {
-    await userServiceClient.updateUserNotification({
+    await userApi.updateUserNotification({
       notification: {
         name: notification.name,
         status: UserNotification_Status.ARCHIVED,
       },
-      updateMask: create(FieldMaskSchema, { paths: ["status"] }),
+      updateMask: createMessage(FieldMaskSchema, { paths: ["status"] }),
     });
     if (!silence) {
       toast.success(t("message.archived-successfully"));
@@ -33,7 +31,7 @@ function MemoMentionMessage({ notification }: Props) {
   };
 
   const handleDeleteMessage = async () => {
-    await userServiceClient.deleteUserNotification({
+    await userApi.deleteUserNotification({
       name: notification.name,
     });
     toast.success(t("message.deleted-successfully"));

@@ -1,10 +1,9 @@
 import { useEffect, useRef } from "react";
 import { Outlet, useLocation, useSearchParams } from "react-router-dom";
+import LuminaTopBar from "@/components/LuminaTopBar";
 import Navigation from "@/components/Navigation";
 import { useInstance } from "@/contexts/InstanceContext";
 import { useMemoFilterContext } from "@/contexts/MemoFilterContext";
-import useMediaQuery from "@/hooks/useMediaQuery";
-import { cn } from "@/lib/utils";
 import { useTranslate } from "@/utils/i18n";
 
 const MEMOS_DEPLOY_URL = "https://usememos.com/docs/deploy";
@@ -28,7 +27,6 @@ const DemoBanner = () => {
 const RootLayout = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const sm = useMediaQuery("sm");
   const { profile } = useInstance();
   const { removeFilter } = useMemoFilterContext();
   const { pathname } = location;
@@ -46,22 +44,13 @@ const RootLayout = () => {
   }, [pathname, searchParams, removeFilter]);
 
   return (
-    <div className="w-full min-h-full flex flex-row justify-center items-start sm:pl-16">
-      {sm && (
-        <div
-          className={cn(
-            "group flex flex-col justify-start items-start fixed top-0 left-0 select-none h-full bg-sidebar",
-            "w-16 px-2",
-            "border-r border-border",
-          )}
-        >
-          <Navigation className="py-4 md:pt-6" collapsed={true} />
-        </div>
-      )}
-      <main className="w-full h-auto grow shrink flex flex-col justify-start items-center">
+    <div className="lumina-app-shell">
+      <LuminaTopBar />
+      <main className="lumina-main">
         {profile.demo && <DemoBanner />}
         <Outlet />
       </main>
+      <Navigation />
     </div>
   );
 };

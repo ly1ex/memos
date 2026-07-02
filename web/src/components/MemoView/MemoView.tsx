@@ -1,11 +1,11 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { State } from "@/api/types";
 import { useAuth } from "@/contexts/AuthContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useUser } from "@/hooks/useUserQueries";
 import { findTagMetadata } from "@/lib/tag";
 import { cn } from "@/lib/utils";
-import { State } from "@/types/proto/api/v1/common_pb";
 import { isSuperUser } from "@/utils/user";
 import MemoShareImageDialog from "../MemoActionMenu/MemoShareImageDialog";
 import MemoEditor from "../MemoEditor";

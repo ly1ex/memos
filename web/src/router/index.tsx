@@ -63,12 +63,18 @@ export const routeConfig: RouteObject[] = [
           // authenticated tab elsewhere must not block it from consuming its
           // one-time OAuth state. Keep it outside the guest-only subtree.
           { path: "callback", element: <AuthCallback /> },
+          // Clerk renders routed sign-in/sign-up callback screens under these
+          // paths. Keep them outside the guest guard so Clerk can finish an
+          // in-flight auth attempt even if app auth state is stale.
+          { path: "sso-callback", element: <SignIn /> },
+          { path: "signup/sso-callback", element: <SignUp /> },
           {
             element: <RequireGuestRoute />,
             children: [
               { path: "", element: <SignIn /> },
               { path: "admin", element: <AdminSignIn /> },
               { path: "signup", element: <SignUp /> },
+              { path: "*", element: <SignIn /> },
             ],
           },
         ],

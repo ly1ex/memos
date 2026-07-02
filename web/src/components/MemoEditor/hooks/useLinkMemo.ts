@@ -1,17 +1,10 @@
-import { create } from "@bufbuild/protobuf";
 import { useEffect, useMemo, useState } from "react";
-import { memoServiceClient } from "@/connect";
+import { memoApi } from "@/api/client";
+import { createMessage, type Memo, type MemoRelation, MemoRelation_MemoSchema, MemoRelation_Type, MemoRelationSchema } from "@/api/types";
 import { DEFAULT_LIST_MEMOS_PAGE_SIZE } from "@/helpers/consts";
 import { buildMemoCreatorFilter } from "@/helpers/resource-names";
 import { useDebouncedEffect } from "@/hooks";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import {
-  type Memo,
-  type MemoRelation,
-  MemoRelation_MemoSchema,
-  MemoRelation_Type,
-  MemoRelationSchema,
-} from "@/types/proto/api/v1/memo_service_pb";
 
 interface UseLinkMemoParams {
   isOpen: boolean;
@@ -52,7 +45,7 @@ export const useLinkMemo = ({ isOpen, currentMemoName, existingRelations, onAddR
         if (searchText) {
           conditions.push(`content.contains("${searchText}")`);
         }
-        const { memos } = await memoServiceClient.listMemos({
+        const { memos } = await memoApi.listMemos({
           pageSize: DEFAULT_LIST_MEMOS_PAGE_SIZE,
           filter: conditions.join(" && "),
         });
@@ -68,9 +61,9 @@ export const useLinkMemo = ({ isOpen, currentMemoName, existingRelations, onAddR
   );
 
   const addMemoRelation = (memo: Memo) => {
-    const relation = create(MemoRelationSchema, {
+    const relation = createMessage(MemoRelationSchema, {
       type: MemoRelation_Type.REFERENCE,
-      relatedMemo: create(MemoRelation_MemoSchema, {
+      relatedMemo: createMessage(MemoRelation_MemoSchema, {
         name: memo.name,
         snippet: memo.snippet,
       }),

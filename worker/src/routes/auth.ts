@@ -1,10 +1,16 @@
 import { Hono } from "hono";
 
 import type { AppEnv } from "../env";
+import { notImplemented } from "../http/errors";
 import { requireAuth } from "../middleware/auth";
 import { ok } from "../http/responses";
+import { toUserResponse } from "../serializers/users";
 
 export const authRoutes = new Hono<AppEnv>();
+
+authRoutes.post("/signin", () => {
+  throw notImplemented("Built-in sign-in is removed; use Clerk session authentication");
+});
 
 authRoutes.get("/me", requireAuth, (c) => {
   const auth = c.get("auth");
@@ -14,7 +20,7 @@ authRoutes.get("/me", requireAuth, (c) => {
         clerkUserId: auth.clerkUserId,
         sessionId: auth.sessionId
       },
-      user: auth.localUser
+      user: toUserResponse(auth.localUser, auth)
     })
   );
 });
@@ -27,3 +33,6 @@ authRoutes.post("/signout", (c) =>
   )
 );
 
+authRoutes.post("/refresh", () => {
+  throw notImplemented("Access-token refresh is managed by Clerk in the Cloudflare Worker backend");
+});

@@ -24,6 +24,7 @@ interface MemoWithRelationRow {
   id: number;
   uid: string;
   creatorId: number;
+  creatorUsername: string | null;
   content: string;
   visibility: "PUBLIC" | "PROTECTED" | "PRIVATE";
   rowStatus: "NORMAL" | "ARCHIVED";
@@ -118,6 +119,7 @@ export async function listMemoComments(
           comment.id,
           comment.uid,
           comment.creator_id AS creatorId,
+          (SELECT username FROM "user" WHERE "user".id = comment.creator_id) AS creatorUsername,
           comment.content,
           comment.visibility,
           comment.row_status AS rowStatus,
@@ -143,6 +145,7 @@ function toMemo(row: MemoWithRelationRow): Memo {
     id: row.id,
     uid: row.uid,
     creatorId: row.creatorId,
+    creatorUsername: row.creatorUsername ?? undefined,
     content: row.content,
     visibility: row.visibility,
     rowStatus: row.rowStatus,

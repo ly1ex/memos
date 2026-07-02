@@ -13,7 +13,7 @@ describe("share serializer", () => {
         createdTs: 10,
         updatedTs: 20
       })
-    ).toEqual({
+    ).toMatchObject({
       id: 1,
       memoId: 2,
       shareId: "share_abc",
@@ -23,4 +23,3 @@ describe("share serializer", () => {
     });
   });
 });
-

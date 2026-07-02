@@ -8,9 +8,7 @@ interface SettingListProps {
 }
 
 export const SettingList = ({ children, className }: SettingListProps) => {
-  return (
-    <div className={cn("overflow-hidden rounded-lg border border-border bg-background divide-y divide-border", className)}>{children}</div>
-  );
+  return <div className={cn("setting-surface overflow-hidden rounded-lg divide-y divide-border", className)}>{children}</div>;
 };
 
 interface SettingListItemProps {
@@ -39,8 +37,8 @@ export const SettingListItem = ({
       <div className={cn("flex min-w-0 gap-2", contentClassName)}>
         {icon && <div className="mt-0.5 shrink-0 text-muted-foreground">{icon}</div>}
         <div className="min-w-0">
-          <div className="text-sm font-medium text-foreground">{label}</div>
-          {description && <div className="mt-1 text-xs leading-5 text-muted-foreground">{description}</div>}
+          <div className="setting-list-label text-sm font-medium text-foreground">{label}</div>
+          {description && <div className="setting-list-description mt-1 text-xs leading-5 text-muted-foreground">{description}</div>}
         </div>
       </div>
       {children && <div className={cn("flex min-w-0 items-center", !vertical && "sm:shrink-0", controlClassName)}>{children}</div>}
@@ -57,7 +55,7 @@ interface SettingPanelProps {
 
 export const SettingPanel = ({ children, className, header, footer }: SettingPanelProps) => {
   return (
-    <div className={cn("overflow-hidden rounded-lg border border-border bg-background", className)}>
+    <div className={cn("setting-surface overflow-hidden rounded-lg", className)}>
       {header && <div className="border-b border-border px-3 py-2">{header}</div>}
       {children}
       {footer && <div className="border-t border-border bg-muted/20 px-3 py-2">{footer}</div>}
@@ -78,8 +76,8 @@ export const SettingCodeEditor = ({ label, description, value, placeholder, onCh
     <SettingPanel
       header={
         <>
-          <div className="text-sm font-medium text-foreground">{label}</div>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
+          <div className="setting-list-label text-sm font-medium text-foreground">{label}</div>
+          <p className="setting-list-description mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
         </>
       }
     >

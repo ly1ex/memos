@@ -17,7 +17,7 @@ const PRODUCT_POINTS = ["Open. Write. Done.", "Markdown-native.", "Fully yours."
 
 const BirdSprite = ({ sprite }: { sprite: TileSprite }) => {
   return (
-    <figure className="flex w-auto min-w-28 flex-none flex-col items-center gap-3 rounded-xl border border-border bg-muted/20 px-4 py-4 text-center">
+    <figure className="lumina-about-sprite flex w-auto min-w-28 flex-none flex-col items-center gap-3 rounded-lg px-4 py-4 text-center">
       <TileSpriteStrip sprite={sprite} scale={SPRITE_SCALE} className="size-16" testId="about-bird-sprite" />
       <figcaption className="min-w-0">
         <h3 className="font-mono text-sm text-foreground">{sprite.name}</h3>
@@ -28,9 +28,9 @@ const BirdSprite = ({ sprite }: { sprite: TileSprite }) => {
 
 const About = () => {
   return (
-    <section className="mx-auto w-full max-w-5xl min-h-full flex flex-col justify-start items-start sm:pt-3 md:pt-6 pb-8">
+    <section className="lumina-page mx-auto flex min-h-full w-full max-w-5xl flex-col items-start justify-start pb-8 sm:pt-3 md:pt-6">
       <div className="w-full">
-        <div className="w-full rounded-xl border border-border bg-background px-4 py-4 text-muted-foreground">
+        <div className="lumina-about-panel w-full rounded-xl px-4 py-4 text-muted-foreground sm:px-6 sm:py-6">
           <SettingSection
             title="About Memos"
             description="Open-source, self-hosted note-taking built for quick capture: Markdown-native, lightweight, and fully yours."
@@ -62,9 +62,9 @@ const About = () => {
               title="Product"
               description="A small timeline for notes that should be saved now and organized later."
             >
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-[1.25fr_1fr]">
                 {PRODUCT_POINTS.map((item) => (
-                  <div key={item} className="rounded-lg bg-muted/40 px-3 py-2 text-sm text-foreground">
+                  <div key={item} className="lumina-about-tile rounded-lg px-3 py-2 text-sm text-foreground">
                     {item}
                   </div>
                 ))}

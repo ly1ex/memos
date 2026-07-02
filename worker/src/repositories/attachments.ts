@@ -8,6 +8,7 @@ export interface Attachment {
   uid: string;
   creatorId: number;
   memoId?: number;
+  memoUid?: string;
   filename: string;
   type: string;
   size: number;
@@ -24,6 +25,7 @@ interface AttachmentRow {
   uid: string;
   creatorId: number;
   memoId: number | null;
+  memoUid: string | null;
   filename: string;
   type: string;
   size: number;
@@ -76,6 +78,7 @@ const attachmentSelect = `
     uid,
     creator_id AS creatorId,
     memo_id AS memoId,
+    (SELECT uid FROM memo WHERE memo.id = attachment.memo_id) AS memoUid,
     filename,
     type,
     size,
@@ -114,6 +117,7 @@ export async function createAttachmentMetadata(db: D1Database, input: CreateAtta
           uid,
           creator_id AS creatorId,
           memo_id AS memoId,
+          (SELECT uid FROM memo WHERE memo.id = memo_id) AS memoUid,
           filename,
           type,
           size,
@@ -193,6 +197,16 @@ export async function getAttachmentByUid(db: D1Database, uid: string): Promise<A
   return row ? toAttachment(row) : null;
 }
 
+export async function getAttachmentByIdOrUid(db: D1Database, idOrUid: string): Promise<Attachment | null> {
+  if (/^\d+$/.test(idOrUid)) {
+    const byId = await getAttachmentById(db, Number(idOrUid));
+    if (byId) {
+      return byId;
+    }
+  }
+  return getAttachmentByUid(db, idOrUid);
+}
+
 export async function setMemoAttachments(db: D1Database, input: SetMemoAttachmentsInput): Promise<Attachment[]> {
   const uniqueAttachmentIds = [...new Set(input.attachmentIds)];
   if (uniqueAttachmentIds.length > 50) {
@@ -264,6 +278,7 @@ export async function deleteAttachmentMetadata(db: D1Database, id: number): Prom
           uid,
           creator_id AS creatorId,
           memo_id AS memoId,
+          (SELECT uid FROM memo WHERE memo.id = memo_id) AS memoUid,
           filename,
           type,
           size,
@@ -326,6 +341,7 @@ export async function updateAttachmentMetadata(db: D1Database, input: UpdateAtta
           uid,
           creator_id AS creatorId,
           memo_id AS memoId,
+          (SELECT uid FROM memo WHERE memo.id = memo_id) AS memoUid,
           filename,
           type,
           size,
@@ -362,6 +378,7 @@ export async function deleteAttachmentsByIds(db: D1Database, input: { ids: numbe
           uid,
           creator_id AS creatorId,
           memo_id AS memoId,
+          (SELECT uid FROM memo WHERE memo.id = memo_id) AS memoUid,
           filename,
           type,
           size,
@@ -374,6 +391,43 @@ export async function deleteAttachmentsByIds(db: D1Database, input: { ids: numbe
       `
     )
     .bind(input.creatorId, ...uniqueIds)
+    .all<AttachmentRow>();
+  return (result.results ?? []).map(toAttachment);
+}
+
+export async function deleteAttachmentsByUids(db: D1Database, input: { uids: string[]; creatorId: number }): Promise<Attachment[]> {
+  const uniqueUids = [...new Set(input.uids)];
+  if (uniqueUids.length === 0) {
+    return [];
+  }
+  if (uniqueUids.length > 50) {
+    throw new HttpError(400, "bad_request", "Too many attachments");
+  }
+
+  const placeholders = uniqueUids.map(() => "?").join(", ");
+  const result = await db
+    .prepare(
+      `
+        DELETE FROM attachment
+        WHERE creator_id = ? AND uid IN (${placeholders})
+        RETURNING
+          id,
+          uid,
+          creator_id AS creatorId,
+          memo_id AS memoId,
+          (SELECT uid FROM memo WHERE memo.id = memo_id) AS memoUid,
+          filename,
+          type,
+          size,
+          r2_key AS r2Key,
+          r2_bucket AS r2Bucket,
+          sha256,
+          metadata_json AS metadataJson,
+          created_ts AS createdTs,
+          updated_ts AS updatedTs
+      `
+    )
+    .bind(input.creatorId, ...uniqueUids)
     .all<AttachmentRow>();
   return (result.results ?? []).map(toAttachment);
 }
@@ -396,6 +450,7 @@ function toAttachment(row: AttachmentRow): Attachment {
     uid: row.uid,
     creatorId: row.creatorId,
     memoId: row.memoId ?? undefined,
+    memoUid: row.memoUid ?? undefined,
     filename: row.filename,
     type: row.type,
     size: row.size,

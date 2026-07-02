@@ -1,12 +1,12 @@
-import { create } from "@bufbuild/protobuf";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { attachmentServiceClient } from "@/connect";
+import { attachmentApi } from "@/api/client";
 import {
   type Attachment,
   BatchDeleteAttachmentsRequestSchema,
+  createMessage,
   type ListAttachmentsRequest,
   ListAttachmentsRequestSchema,
-} from "@/types/proto/api/v1/attachment_service_pb";
+} from "@/api/types";
 
 // Query keys factory
 export const attachmentKeys = {
@@ -22,7 +22,7 @@ export function useAttachments() {
   return useQuery({
     queryKey: attachmentKeys.lists(),
     queryFn: async () => {
-      const { attachments } = await attachmentServiceClient.listAttachments(create(ListAttachmentsRequestSchema, {}));
+      const { attachments } = await attachmentApi.listAttachments(createMessage(ListAttachmentsRequestSchema, {}));
       return attachments;
     },
   });
@@ -32,8 +32,8 @@ export function useInfiniteAttachments(request: Partial<ListAttachmentsRequest> 
   return useInfiniteQuery({
     queryKey: attachmentKeys.list(request),
     queryFn: async ({ pageParam }) => {
-      const response = await attachmentServiceClient.listAttachments(
-        create(ListAttachmentsRequestSchema, {
+      const response = await attachmentApi.listAttachments(
+        createMessage(ListAttachmentsRequestSchema, {
           ...request,
           pageToken: pageParam || "",
         } as Record<string, unknown>),
@@ -54,7 +54,7 @@ export function useCreateAttachment() {
 
   return useMutation({
     mutationFn: async (attachment: Attachment) => {
-      const result = await attachmentServiceClient.createAttachment({ attachment });
+      const result = await attachmentApi.createAttachment({ attachment });
       return result;
     },
     onSuccess: () => {
@@ -70,7 +70,7 @@ export function useDeleteAttachment() {
 
   return useMutation({
     mutationFn: async (name: string) => {
-      await attachmentServiceClient.deleteAttachment({ name });
+      await attachmentApi.deleteAttachment({ name });
       return name;
     },
     onSuccess: (name) => {
@@ -87,7 +87,7 @@ export function useBatchDeleteAttachments() {
 
   return useMutation({
     mutationFn: async (names: string[]) => {
-      await attachmentServiceClient.batchDeleteAttachments(create(BatchDeleteAttachmentsRequestSchema, { names }));
+      await attachmentApi.batchDeleteAttachments(createMessage(BatchDeleteAttachmentsRequestSchema, { names }));
       return names;
     },
     onSuccess: (names) => {

@@ -1,9 +1,9 @@
 import { SmilePlusIcon } from "lucide-react";
 import { useState } from "react";
+import type { Memo } from "@/api/types";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useInstance } from "@/contexts/InstanceContext";
 import { cn } from "@/lib/utils";
-import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { useReactionActions } from "./hooks";
 
 interface Props {

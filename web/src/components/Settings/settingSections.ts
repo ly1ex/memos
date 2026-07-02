@@ -1,46 +1,15 @@
-import {
-  BarChart3Icon,
-  CogIcon,
-  DatabaseIcon,
-  HeartHandshakeIcon,
-  KeyIcon,
-  LibraryIcon,
-  type LucideIcon,
-  MailIcon,
-  Settings2Icon,
-  TagsIcon,
-  UserIcon,
-  UsersIcon,
-  WebhookIcon,
-} from "lucide-react";
+import { CogIcon, LibraryIcon, type LucideIcon, MailIcon, Settings2Icon, TagsIcon, UsersIcon, WebhookIcon } from "lucide-react";
 import { type ComponentType } from "react";
-import AISection from "@/components/Settings/AISection";
+import { InstanceSetting_Key } from "@/api/types";
 import InstanceSection from "@/components/Settings/InstanceSection";
 import MemberSection from "@/components/Settings/MemberSection";
 import MemoRelatedSettings from "@/components/Settings/MemoRelatedSettings";
-import MyAccountSection from "@/components/Settings/MyAccountSection";
 import NotificationSection from "@/components/Settings/NotificationSection";
 import PreferencesSection from "@/components/Settings/PreferencesSection";
-import ResourceStatsSection from "@/components/Settings/ResourceStatsSection";
-import SSOSection from "@/components/Settings/SSOSection";
-import StorageSection from "@/components/Settings/StorageSection";
 import TagsSection from "@/components/Settings/TagsSection";
 import WebhookSection from "@/components/Settings/WebhookSection";
-import { InstanceSetting_Key } from "@/types/proto/api/v1/instance_service_pb";
 
-export type SettingSectionKey =
-  | "my-account"
-  | "preference"
-  | "webhook"
-  | "member"
-  | "system"
-  | "memo"
-  | "storage"
-  | "notification"
-  | "sso"
-  | "tags"
-  | "ai"
-  | "resource-stats";
+export type SettingSectionKey = "preference" | "webhook" | "member" | "system" | "memo" | "notification" | "tags";
 
 type SettingSectionScope = "basic" | "admin";
 
@@ -54,13 +23,6 @@ export interface SettingSectionDefinition {
 }
 
 export const SETTINGS_SECTIONS: SettingSectionDefinition[] = [
-  {
-    key: "my-account",
-    scope: "basic",
-    labelKey: "setting.my-account.label",
-    icon: UserIcon,
-    component: MyAccountSection,
-  },
   {
     key: "preference",
     scope: "basic",
@@ -104,14 +66,6 @@ export const SETTINGS_SECTIONS: SettingSectionDefinition[] = [
     component: TagsSection,
   },
   {
-    key: "storage",
-    scope: "admin",
-    labelKey: "setting.storage.label",
-    icon: DatabaseIcon,
-    component: StorageSection,
-    preloadSettingKeys: [InstanceSetting_Key.STORAGE],
-  },
-  {
     key: "notification",
     scope: "admin",
     labelKey: "setting.notification.label",
@@ -119,31 +73,9 @@ export const SETTINGS_SECTIONS: SettingSectionDefinition[] = [
     component: NotificationSection,
     preloadSettingKeys: [InstanceSetting_Key.NOTIFICATION],
   },
-  {
-    key: "sso",
-    scope: "admin",
-    labelKey: "setting.sso.label",
-    icon: KeyIcon,
-    component: SSOSection,
-  },
-  {
-    key: "ai",
-    scope: "admin",
-    labelKey: "setting.ai.label",
-    icon: HeartHandshakeIcon,
-    component: AISection,
-    preloadSettingKeys: [InstanceSetting_Key.AI],
-  },
-  {
-    key: "resource-stats",
-    scope: "admin",
-    labelKey: "setting.resource-stats.label",
-    icon: BarChart3Icon,
-    component: ResourceStatsSection,
-  },
 ];
 
-export const DEFAULT_SETTING_SECTION: SettingSectionKey = "my-account";
+export const DEFAULT_SETTING_SECTION: SettingSectionKey = "preference";
 
 export const isSettingSectionKey = (value: string): value is SettingSectionKey => {
   return SETTINGS_SECTIONS.some((section) => section.key === value);

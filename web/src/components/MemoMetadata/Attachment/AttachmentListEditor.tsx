@@ -1,12 +1,12 @@
 import { ChevronDownIcon, ChevronUpIcon, FileAudioIcon, FileIcon, PaperclipIcon, PauseIcon, PlayIcon, XIcon } from "lucide-react";
 import { type FC, type MouseEvent, useMemo, useRef, useState } from "react";
+import type { Attachment } from "@/api/types";
 import type { AttachmentItem, LocalFile } from "@/components/MemoEditor/types/attachment";
 import { getAudioRecordingTimeLabel, toAttachmentItems } from "@/components/MemoEditor/types/attachment";
 import MetadataSection from "@/components/MemoMetadata/MetadataSection";
 import PreviewImageDialog from "@/components/PreviewImageDialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
 import { formatFileSize, getFileTypeLabel } from "@/utils/format";
 import { useTranslate } from "@/utils/i18n";
 import type { PreviewMediaItem } from "@/utils/media-item";

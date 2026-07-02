@@ -1,20 +1,18 @@
-import { create } from "@bufbuild/protobuf";
 import { isEqual } from "lodash-es";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { identityProviderServiceClient } from "@/connect";
-import { useInstance } from "@/contexts/InstanceContext";
-import useDialog from "@/hooks/useDialog";
-import { IdentityProvider } from "@/types/proto/api/v1/idp_service_pb";
 import {
+  createMessage,
   InstanceSetting_GeneralSetting,
   InstanceSetting_GeneralSettingSchema,
   InstanceSetting_Key,
   InstanceSettingSchema,
-} from "@/types/proto/api/v1/instance_service_pb";
+} from "@/api/types";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { useInstance } from "@/contexts/InstanceContext";
+import useDialog from "@/hooks/useDialog";
 import { useTranslate } from "@/utils/i18n";
 import UpdateCustomizedProfileDialog from "../UpdateCustomizedProfileDialog";
 import SettingGroup from "./SettingGroup";
@@ -28,24 +26,14 @@ const InstanceSection = () => {
   const saveInstanceSetting = useInstanceSettingUpdater();
   const { generalSetting: originalSetting, profile } = useInstance();
   const [instanceGeneralSetting, setInstanceGeneralSetting] = useState<InstanceSetting_GeneralSetting>(originalSetting);
-  const [identityProviderList, setIdentityProviderList] = useState<IdentityProvider[]>([]);
 
   useEffect(() => {
     setInstanceGeneralSetting(originalSetting);
   }, [originalSetting]);
 
-  const fetchIdentityProviderList = async () => {
-    const { identityProviders } = await identityProviderServiceClient.listIdentityProviders({});
-    setIdentityProviderList(identityProviders);
-  };
-
-  useEffect(() => {
-    fetchIdentityProviderList();
-  }, []);
-
   const updatePartialSetting = (partial: Partial<InstanceSetting_GeneralSetting>) => {
     setInstanceGeneralSetting(
-      create(InstanceSetting_GeneralSettingSchema, {
+      createMessage(InstanceSetting_GeneralSettingSchema, {
         ...instanceGeneralSetting,
         ...partial,
       }),
@@ -55,7 +43,7 @@ const InstanceSection = () => {
   const handleSaveGeneralSetting = async () => {
     await saveInstanceSetting({
       key: InstanceSetting_Key.GENERAL,
-      setting: create(InstanceSettingSchema, {
+      setting: createMessage(InstanceSettingSchema, {
         name: buildInstanceSettingName(InstanceSetting_Key.GENERAL),
         value: {
           case: "generalSetting",
@@ -114,7 +102,7 @@ const InstanceSection = () => {
             description={t("setting.instance.disallow-password-auth-description")}
           >
             <Switch
-              disabled={profile.demo || (identityProviderList.length === 0 && !instanceGeneralSetting.disallowPasswordAuth)}
+              disabled={profile.demo}
               checked={instanceGeneralSetting.disallowPasswordAuth}
               onCheckedChange={(checked) => updatePartialSetting({ disallowPasswordAuth: checked })}
             />

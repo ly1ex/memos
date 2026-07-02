@@ -1,4 +1,4 @@
-import { Attachment, MotionMediaFamily, MotionMediaRole } from "@/types/proto/api/v1/attachment_service_pb";
+import { Attachment, MotionMediaFamily, MotionMediaRole } from "@/api/types";
 
 export const getAttachmentUrl = (attachment: Attachment) => {
   if (attachment.externalLink) {
@@ -68,9 +68,11 @@ export const isAppleLivePhotoVideo = (attachment: Attachment): boolean =>
   attachment.motionMedia?.family === MotionMediaFamily.APPLE_LIVE_PHOTO && attachment.motionMedia.role === MotionMediaRole.VIDEO;
 
 export const isAndroidMotionContainer = (attachment: Attachment): boolean =>
-  attachment.motionMedia?.family === MotionMediaFamily.ANDROID_MOTION_PHOTO &&
-  attachment.motionMedia.role === MotionMediaRole.CONTAINER &&
-  attachment.motionMedia.hasEmbeddedVideo;
+  Boolean(
+    attachment.motionMedia?.family === MotionMediaFamily.ANDROID_MOTION_PHOTO &&
+      attachment.motionMedia.role === MotionMediaRole.CONTAINER &&
+      attachment.motionMedia.hasEmbeddedVideo,
+  );
 
 export const isMotionAttachment = (attachment: Attachment): boolean =>
   isAppleLivePhotoStill(attachment) || isAppleLivePhotoVideo(attachment) || isAndroidMotionContainer(attachment);

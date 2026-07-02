@@ -39,14 +39,16 @@ function hasAncestorOfType(routes: RouteObject[], path: string, guardType: unkno
 }
 
 describe("router configuration", () => {
-  it("keeps /auth/callback outside the guest-only guard", () => {
+  it("keeps auth callback routes outside the guest-only guard", () => {
     // Regression guard for issue #5846 follow-up: an authenticated tab elsewhere
-    // must not short-circuit the OAuth callback via RequireGuestRoute.
+    // must not short-circuit auth callbacks via RequireGuestRoute.
     expect(hasAncestorOfType(routeConfig, "callback", RequireGuestRoute)).toBe(false);
+    expect(hasAncestorOfType(routeConfig, "sso-callback", RequireGuestRoute)).toBe(false);
+    expect(hasAncestorOfType(routeConfig, "signup/sso-callback", RequireGuestRoute)).toBe(false);
   });
 
   it("wraps the remaining /auth children in RequireGuestRoute", () => {
-    for (const path of ["", "admin", "signup"]) {
+    for (const path of ["", "admin", "signup", "*"]) {
       expect(hasAncestorOfType(routeConfig, path, RequireGuestRoute)).toBe(true);
     }
   });
@@ -63,7 +65,9 @@ describe("router configuration", () => {
     }
   });
 
-  it("exposes an accessible /auth/callback route definition", () => {
+  it("exposes accessible auth callback route definitions", () => {
     expect(findByPath(routeConfig, "callback")).toBeTruthy();
+    expect(findByPath(routeConfig, "sso-callback")).toBeTruthy();
+    expect(findByPath(routeConfig, "signup/sso-callback")).toBeTruthy();
   });
 });

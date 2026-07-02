@@ -1,5 +1,5 @@
-import { timestampDate } from "@bufbuild/protobuf/wkt";
 import L, { DivIcon } from "leaflet";
+import { timestampDate } from "@/api/types";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import { ArrowUpRightIcon, MapPinIcon } from "lucide-react";
@@ -7,12 +7,11 @@ import { useEffect, useMemo } from "react";
 import { MapContainer, Marker, Popup, useMap } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { Link } from "react-router-dom";
+import { Memo, State } from "@/api/types";
 import { defaultMarkerIcon, ThemedTileLayer } from "@/components/map/map-utils";
 import { buildMemoCreatorFilter } from "@/helpers/resource-names";
 import { useInfiniteMemos } from "@/hooks/useMemoQueries";
 import { cn } from "@/lib/utils";
-import { State } from "@/types/proto/api/v1/common_pb";
-import { Memo } from "@/types/proto/api/v1/memo_service_pb";
 
 interface Props {
   creator: string;

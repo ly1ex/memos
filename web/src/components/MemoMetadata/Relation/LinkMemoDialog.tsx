@@ -1,11 +1,11 @@
-import { timestampDate } from "@bufbuild/protobuf/wkt";
 import { LinkIcon } from "lucide-react";
+import type { Memo } from "@/api/types";
+import { timestampDate } from "@/api/types";
 import { MemoPreview } from "@/components/MemoPreview";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import { cn } from "@/lib/utils";
-import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
 interface LinkMemoDialogProps {

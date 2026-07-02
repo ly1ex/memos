@@ -1,12 +1,10 @@
-import { create } from "@bufbuild/protobuf";
-import { timestampDate } from "@bufbuild/protobuf/wkt";
 import { isEqual } from "lodash-es";
 import { CheckCircleIcon, ChevronRightIcon, Code2Icon, HashIcon, ImageIcon, LinkIcon, type LucideIcon, Share2Icon } from "lucide-react";
 import { useMemo, useState } from "react";
+import { createMessage, Memo, Memo_PropertySchema, timestampDate } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { cn } from "@/lib/utils";
-import { Memo, Memo_PropertySchema } from "@/types/proto/api/v1/memo_service_pb";
 import { type Translations, useTranslate } from "@/utils/i18n";
 import { extractHeadings } from "@/utils/markdown-manipulation";
 import { isSuperUser } from "@/utils/user";
@@ -47,7 +45,7 @@ const MemoDetailSidebar = ({ memo, className, onShareImageOpen }: Props) => {
   const t = useTranslate();
   const currentUser = useCurrentUser();
   const [sharePanelOpen, setSharePanelOpen] = useState(false);
-  const property = create(Memo_PropertySchema, memo.property || {});
+  const property = createMessage(Memo_PropertySchema, memo.property || {});
   const canManageShares = !memo.parent && (memo.creator === currentUser?.name || isSuperUser(currentUser));
   const hasUpdated = !isEqual(memo.createTime, memo.updateTime);
   const headings = useMemo(() => extractHeadings(memo.content), [memo.content]);

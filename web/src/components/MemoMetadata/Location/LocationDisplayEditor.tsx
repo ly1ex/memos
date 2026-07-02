@@ -1,8 +1,8 @@
 import { MapPinIcon, XIcon } from "lucide-react";
 import type { FC } from "react";
+import type { Location } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { Location } from "@/types/proto/api/v1/memo_service_pb";
 import { getLocationCoordinatesText, getLocationDisplayText } from "./locationHelpers";
 
 interface LocationDisplayEditorProps {

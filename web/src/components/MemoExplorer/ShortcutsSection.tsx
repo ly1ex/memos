@@ -2,14 +2,14 @@ import { Edit3Icon, MoreVerticalIcon, PlusIcon, TrashIcon } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { shortcutApi } from "@/api/client";
+import { Shortcut } from "@/api/types";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { shortcutServiceClient } from "@/connect";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMemoFilterContext } from "@/contexts/MemoFilterContext";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/router";
-import { Shortcut } from "@/types/proto/api/v1/shortcut_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 
@@ -35,7 +35,7 @@ function ShortcutsSection() {
 
   const confirmDeleteShortcut = async () => {
     if (!deleteTarget) return;
-    await shortcutServiceClient.deleteShortcut({ name: deleteTarget.name });
+    await shortcutApi.deleteShortcut({ name: deleteTarget.name });
     await refetchSettings();
     toast.success(t("setting.shortcut.delete-success", { title: deleteTarget.title }));
     setDeleteTarget(undefined);

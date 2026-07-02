@@ -1,6 +1,12 @@
-import { create } from "@bufbuild/protobuf";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
+import {
+  createMessage,
+  InstanceSetting_GeneralSetting_CustomProfile,
+  InstanceSetting_GeneralSetting_CustomProfileSchema,
+  InstanceSetting_Key,
+  InstanceSettingSchema,
+} from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -9,12 +15,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useInstance } from "@/contexts/InstanceContext";
 import { buildInstanceSettingName } from "@/helpers/resource-names";
 import { handleError } from "@/lib/error";
-import {
-  InstanceSetting_GeneralSetting_CustomProfile,
-  InstanceSetting_GeneralSetting_CustomProfileSchema,
-  InstanceSetting_Key,
-  InstanceSettingSchema,
-} from "@/types/proto/api/v1/instance_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
 interface Props {
@@ -27,7 +27,7 @@ function UpdateCustomizedProfileDialog({ open, onOpenChange, onSuccess }: Props)
   const t = useTranslate();
   const { generalSetting: instanceGeneralSetting, updateSetting } = useInstance();
   const [customProfile, setCustomProfile] = useState<InstanceSetting_GeneralSetting_CustomProfile>(
-    create(InstanceSetting_GeneralSetting_CustomProfileSchema, instanceGeneralSetting.customProfile || {}),
+    createMessage(InstanceSetting_GeneralSetting_CustomProfileSchema, instanceGeneralSetting.customProfile || {}),
   );
 
   const [isLoading, setIsLoading] = useState(false);
@@ -78,7 +78,7 @@ function UpdateCustomizedProfileDialog({ open, onOpenChange, onSuccess }: Props)
     setIsLoading(true);
     try {
       await updateSetting(
-        create(InstanceSettingSchema, {
+        createMessage(InstanceSettingSchema, {
           name: buildInstanceSettingName(InstanceSetting_Key.GENERAL),
           value: {
             case: "generalSetting",

@@ -1,9 +1,8 @@
+import type { Memo, User } from "@/api/types";
+import { State } from "@/api/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { cn } from "@/lib/utils";
-import { State } from "@/types/proto/api/v1/common_pb";
-import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
-import type { User } from "@/types/proto/api/v1/user_service_pb";
 import { formatReactionTooltip, useReactionActions } from "./hooks";
 
 interface Props {

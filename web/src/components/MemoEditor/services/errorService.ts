@@ -4,7 +4,7 @@ export const errorService = {
       return (error as { rawMessage?: string }).rawMessage || "An error occurred";
     }
 
-    // Handle ConnectError or errors with details property
+    // Handle ApiError or errors with details property
     if (error && typeof error === "object" && "details" in error) {
       return (error as { details?: string }).details || "An error occurred";
     }

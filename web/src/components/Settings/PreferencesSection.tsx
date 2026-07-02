@@ -1,9 +1,7 @@
-import { create } from "@bufbuild/protobuf";
+import { createMessage, UserSetting_GeneralSetting, UserSetting_GeneralSettingSchema, Visibility } from "@/api/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUpdateUserGeneralSetting } from "@/hooks/useUserQueries";
-import { Visibility } from "@/types/proto/api/v1/memo_service_pb";
-import { UserSetting_GeneralSetting, UserSetting_GeneralSettingSchema } from "@/types/proto/api/v1/user_service_pb";
 import { loadLocale, useTranslate } from "@/utils/i18n";
 import { convertVisibilityFromString, convertVisibilityToString } from "@/utils/memo";
 import { loadTheme } from "@/utils/theme";
@@ -61,7 +59,7 @@ const PreferencesSection = () => {
   // Provide default values if setting is not loaded yet
   const setting: UserSetting_GeneralSetting =
     generalSetting ||
-    create(UserSetting_GeneralSettingSchema, {
+    createMessage(UserSetting_GeneralSettingSchema, {
       locale: "en",
       memoVisibility: "PRIVATE",
       theme: "system",

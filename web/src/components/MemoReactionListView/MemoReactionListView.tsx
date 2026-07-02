@@ -1,7 +1,7 @@
 import { memo } from "react";
+import type { Memo, Reaction } from "@/api/types";
+import { State } from "@/api/types";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import { State } from "@/types/proto/api/v1/common_pb";
-import type { Memo, Reaction } from "@/types/proto/api/v1/memo_service_pb";
 import { useReactionGroups } from "./hooks";
 import ReactionSelector from "./ReactionSelector";
 import ReactionView from "./ReactionView";

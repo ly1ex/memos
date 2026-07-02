@@ -1,8 +1,7 @@
-import { create } from "@bufbuild/protobuf";
 import { useEffect, useMemo, useState } from "react";
-import { memoServiceClient } from "@/connect";
-import type { MemoRelation } from "@/types/proto/api/v1/memo_service_pb";
-import { MemoRelation_Memo, MemoRelation_MemoSchema } from "@/types/proto/api/v1/memo_service_pb";
+import { memoApi } from "@/api/client";
+import type { MemoRelation } from "@/api/types";
+import { createMessage, MemoRelation_Memo, MemoRelation_MemoSchema } from "@/api/types";
 
 export const useResolvedRelationMemos = (relations: MemoRelation[]) => {
   const [resolvedMemos, setResolvedMemos] = useState<Record<string, MemoRelation_Memo>>({});
@@ -32,8 +31,8 @@ export const useResolvedRelationMemos = (relations: MemoRelation[]) => {
       try {
         const memos = await Promise.all(
           missingMemoNames.map(async (name) => {
-            const memo = await memoServiceClient.getMemo({ name });
-            return create(MemoRelation_MemoSchema, { name: memo.name, snippet: memo.snippet });
+            const memo = await memoApi.getMemo({ name });
+            return createMessage(MemoRelation_MemoSchema, { name: memo.name, snippet: memo.snippet });
           }),
         );
 

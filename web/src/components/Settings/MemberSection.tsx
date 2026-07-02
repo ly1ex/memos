@@ -1,21 +1,18 @@
-import { create } from "@bufbuild/protobuf";
-import { FieldMaskSchema } from "@bufbuild/protobuf/wkt";
 import { sortBy } from "lodash-es";
 import { MoreVerticalIcon, PlusIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { userApi } from "@/api/client";
+import { createMessage, FieldMaskSchema, State, User, User_Role } from "@/api/types";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import InfoChip from "@/components/Settings/InfoChip";
 import UserAvatar from "@/components/UserAvatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { userServiceClient } from "@/connect";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useDialog } from "@/hooks/useDialog";
 import { useDeleteUser, useListUsers } from "@/hooks/useUserQueries";
 import { handleError } from "@/lib/error";
-import { State } from "@/types/proto/api/v1/common_pb";
-import { User, User_Role } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import CreateUserDialog from "../CreateUserDialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
@@ -54,12 +51,12 @@ const MemberSection = () => {
     if (!archiveTarget) return;
     const username = archiveTarget.username;
     try {
-      await userServiceClient.updateUser({
+      await userApi.updateUser({
         user: {
           name: archiveTarget.name,
           state: State.ARCHIVED,
         },
-        updateMask: create(FieldMaskSchema, { paths: ["state"] }),
+        updateMask: createMessage(FieldMaskSchema, { paths: ["state"] }),
       });
       toast.success(t("setting.member.archive-success", { username }));
       await refetchUsers();
@@ -72,12 +69,12 @@ const MemberSection = () => {
   const handleRestoreUserClick = async (user: User) => {
     const { username } = user;
     try {
-      await userServiceClient.updateUser({
+      await userApi.updateUser({
         user: {
           name: user.name,
           state: State.NORMAL,
         },
-        updateMask: create(FieldMaskSchema, { paths: ["state"] }),
+        updateMask: createMessage(FieldMaskSchema, { paths: ["state"] }),
       });
       toast.success(t("setting.member.restore-success", { username }));
       await refetchUsers();

@@ -1,16 +1,15 @@
-import { create } from "@bufbuild/protobuf";
-import { timestampFromDate } from "@bufbuild/protobuf/wkt";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { memoServiceClient } from "@/connect";
-import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
-import type { MemoShare } from "@/types/proto/api/v1/memo_service_pb";
+import { memoApi } from "@/api/client";
+import type { Attachment, MemoShare } from "@/api/types";
 import {
   CreateMemoShareRequestSchema,
+  createMessage,
   DeleteMemoShareRequestSchema,
   GetMemoByShareRequestSchema,
   ListMemoSharesRequestSchema,
   MemoShareSchema,
-} from "@/types/proto/api/v1/memo_service_pb";
+  timestampFromDate,
+} from "@/api/types";
 
 // Query keys factory for share-related cache management.
 export const memoShareKeys = {
@@ -24,7 +23,7 @@ export function useMemoShares(memoName: string, options?: { enabled?: boolean })
   return useQuery({
     queryKey: memoShareKeys.list(memoName),
     queryFn: async () => {
-      const response = await memoServiceClient.listMemoShares(create(ListMemoSharesRequestSchema, { parent: memoName }));
+      const response = await memoApi.listMemoShares(createMessage(ListMemoSharesRequestSchema, { parent: memoName }));
       return response.memoShares;
     },
     enabled: options?.enabled ?? !!memoName,
@@ -36,10 +35,10 @@ export function useCreateMemoShare() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ memoName, expireTime }: { memoName: string; expireTime?: Date }) => {
-      const memoShare = create(MemoShareSchema, {
+      const memoShare = createMessage(MemoShareSchema, {
         expireTime: expireTime ? timestampFromDate(expireTime) : undefined,
       });
-      const response = await memoServiceClient.createMemoShare(create(CreateMemoShareRequestSchema, { parent: memoName, memoShare }));
+      const response = await memoApi.createMemoShare(createMessage(CreateMemoShareRequestSchema, { parent: memoName, memoShare }));
       return response;
     },
     onSuccess: (_data, variables) => {
@@ -53,7 +52,7 @@ export function useDeleteMemoShare() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ name, memoName }: { name: string; memoName: string }) => {
-      await memoServiceClient.deleteMemoShare(create(DeleteMemoShareRequestSchema, { name }));
+      await memoApi.deleteMemoShare(createMessage(DeleteMemoShareRequestSchema, { name }));
       return memoName;
     },
     onSuccess: (_data, variables) => {
@@ -67,7 +66,7 @@ export function useSharedMemo(shareId: string, options?: { enabled?: boolean }) 
   return useQuery({
     queryKey: memoShareKeys.byShare(shareId),
     queryFn: async () => {
-      const memo = await memoServiceClient.getMemoByShare(create(GetMemoByShareRequestSchema, { shareId }));
+      const memo = await memoApi.getMemoByShare(createMessage(GetMemoByShareRequestSchema, { shareId }));
       return memo;
     },
     enabled: options?.enabled ?? !!shareId,

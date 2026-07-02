@@ -31,12 +31,13 @@ Platform constraints that shape the design:
 - Pages routes `/api/*`, `/file/*`, `/explore/*`, `/u/*`, and `/mcp` to the Worker. SPA routes continue to resolve from Pages assets.
 - D1 is bound as `DB`.
 - R2 is bound as `ATTACHMENTS`.
+- Cloudflare Email Service is bound as `EMAIL` with `[[send_email]]`.
 - Clerk secrets and public keys are Worker environment variables:
   - `CLERK_SECRET_KEY`
   - `CLERK_PUBLISHABLE_KEY`
   - `CLERK_JWT_KEY`
   - `CLERK_AUTHORIZED_PARTIES`
-- Optional provider secrets for mail, AI transcription, and webhook signing remain Worker secrets.
+- AI transcription and webhook signing provider secrets remain Worker secrets.
 
 ### Application Layers
 
@@ -57,7 +58,7 @@ Do not port the Go `store.Driver` abstraction. D1 is the only database target in
 
 - Connect RPC compatibility.
 - gRPC-Gateway compatibility.
-- Generated protobuf TypeScript client dependency in the frontend API path.
+- Generated RPC TypeScript client dependency in the frontend API path.
 - Built-in username/password sign-in.
 - Built-in OAuth IdP configuration and callback flow.
 - PAT support.
@@ -75,7 +76,7 @@ Do not port the Go `store.Driver` abstraction. D1 is the only database target in
 - Memo relations, reactions, shares, shortcuts.
 - Instance settings and user settings that are still meaningful after Clerk migration.
 - Inbox notifications.
-- Email and webhook delivery, with Worker-native job scheduling.
+- Email delivery through Cloudflare Email Service and webhook delivery, with Worker-native job scheduling.
 - RSS endpoints.
 - Attachment metadata and access control.
 - AI transcription endpoint if provider configuration is available in Worker secrets.
@@ -103,7 +104,9 @@ Instance:
 - `GET /api/v1/instance/profile`
 - `GET /api/v1/instance/settings/:key`
 - `GET /api/v1/instance/settings:batchGet`
+- `POST /api/v1/instance/settings:batchGet`
 - `PATCH /api/v1/instance/settings/:key`
+- `POST /api/v1/instance/settings/notification:testEmail`
 - `GET /api/v1/instance/stats`
 
 Users:
@@ -182,8 +185,8 @@ Clerk owns identity and sessions. The application owns local authorization.
 
 - Add `@clerk/react`.
 - Wrap the app in `ClerkProvider`.
-- Replace `web/src/auth-state.ts` and token refresh logic with Clerk session access.
-- Replace Connect clients in `web/src/connect.ts` with a typed fetch client.
+- Replace app-issued token refresh logic with Clerk session access.
+- Add `web/src/api/client.ts` as the typed REST fetch client.
 - The fetch client calls `getToken()` and sends `Authorization: Bearer <token>` for authenticated requests.
 - Remove frontend assumptions about app-issued access tokens, refresh cookies, and BroadcastChannel token sync.
 
@@ -300,7 +303,7 @@ Access control is resolved through the owning memo, share token, or creator role
 
 ### Settings And JSON
 
-Keep proto JSON concepts as plain JSON text for the Cloudflare edition. Do not depend on generated protobuf JSON types in Worker code. Validate setting payloads with TypeScript schemas before writing D1.
+Keep settings as plain JSON text for the Cloudflare edition. Do not depend on generated RPC JSON types in Worker code. Validate setting payloads with TypeScript schemas before writing D1.
 
 ## R2 Attachment Flow
 
@@ -427,8 +430,8 @@ Authentication:
 Main changes:
 
 - Add Clerk provider and sign-in/sign-up routes or components.
-- Replace `web/src/connect.ts` with a fetch client.
-- Replace generated proto request/response assumptions with TypeScript API types owned by the frontend or shared Worker package.
+- Replace the legacy frontend API entry with `web/src/api/client.ts`.
+- Replace generated RPC request/response assumptions with TypeScript API types owned by the frontend or shared Worker package.
 - Remove refresh-token and access-token storage from `web/src/auth-state.ts`.
 - Update React Query hooks to call REST endpoints.
 - Replace SSE invalidation hook with polling defaults.
@@ -475,6 +478,33 @@ Attachment mapping policy:
 - D1 stores only R2 metadata after migration.
 
 ## Implementation Milestones
+
+## Progress Update - 2026-07-01
+
+Implemented in the Worker slice:
+
+- Cloudflare Email Service send binding is configured as `EMAIL`; notification test email uses `env.EMAIL.send(...)`.
+- `GET /api/v1/memos` is public again, matching the old backend visibility contract: anonymous users see PUBLIC memos, signed-in users see their own memos plus PUBLIC/PROTECTED memos.
+- Memo resource routes now accept old resource ids as well as numeric ids for detail, update, delete, comments, attachments, relations, reactions, and shares.
+- Memo responses include old resource-oriented fields such as `name`, `creator`, `state`, `createTime`, `updateTime`, `tags`, `property`, and `snippet` while preserving Worker-native fields.
+- Attachment resource routes now accept `attachments/{uid}` or uid/numeric ids for get, update, and delete.
+- `attachments:batchDelete` accepts old `names: ["attachments/{uid}"]` input as well as Worker-native `attachmentIds`.
+- User compatibility routes now cover list, get, update, delete, batchGet, stats, user settings, and user-scoped shortcuts.
+- Legacy colon routes that cannot be represented under subrouters are registered at the `/api/v1` root, including `users:batchGet` and `users:stats`.
+- Instance `settings:batchGet` supports POST and GET, and `settings/notification:testEmail` is implemented.
+- Sensitive instance settings (`STORAGE`, `NOTIFICATION`, `AI`) require admin access and redact `smtpPassword`, `accessKeySecret`, and `apiKey` on read.
+- User email is redacted for anonymous callers and unrelated regular users; only the same user or admins receive email addresses.
+- Memo relation listing filters out relations to memos the viewer cannot read, preventing private memo id leakage through public memo relations.
+- Removed or deferred old surfaces return explicit `not_implemented` errors instead of silent 404s: built-in sign-in/refresh, identity provider CRUD, AI transcription, linked identities, PATs, webhooks, and inbox notifications.
+- SSE remains intentionally incompatible and returns 410; clients must poll.
+
+Known remaining gaps:
+
+- The React app now uses the REST client and Clerk session tokens.
+- Worker REST responses keep the Cloudflare edition `{ data: ... }` envelope, so exact old gRPC-Gateway raw JSON wire compatibility is not the target.
+- Attachment create currently supports Worker multipart upload and custom `attachmentId`, but not the old byte-content upload shape.
+- Full old CEL filtering, order_by parity, archived memo listing, motion photo metadata, EXIF stripping, inbox notifications, webhook dispatch, and AI transcription are still pending.
+- Email notification side effects for mentions/comments are pending until Worker inbox notification creation is implemented.
 
 ### M1: Worker Skeleton
 
@@ -529,7 +559,7 @@ Validation:
 ### M5: Frontend API Cutover
 
 - Add Clerk UI/provider.
-- Replace Connect clients with REST fetch client.
+- Replace legacy RPC clients with REST fetch client.
 - Update React Query hooks.
 - Replace SSE with polling.
 - Update attachment upload and download paths.
@@ -635,3 +665,29 @@ Manual acceptance:
 - Frontend refresh works through polling and mutation invalidation, with no SSE route dependency.
 - Scheduled Worker handles mail, webhook, cleanup, and stats jobs.
 - `/mcp` exists and can call curated memo tools with the same authorization rules as REST.
+
+## Progress Update - 2026-07-01 Frontend Cutover
+
+Completed in the frontend:
+
+- Added the Clerk frontend bridge around the React app. The app now reads Clerk session tokens through `VITE_CLERK_PUBLISHABLE_KEY` and sends them as bearer tokens to the Worker REST API.
+- Removed the old frontend API entry and generated RPC DTO files. The React app now imports `web/src/api/client.ts` and calls `memoApi`, `userApi`, `instanceApi`, and the other REST modules directly.
+- Removed frontend dependence on `/api/v1/sse`. `useLiveMemoRefresh` now invalidates active memo/stat/notification queries on a polling interval.
+- Replaced password/OAuth sign-in and sign-up pages with Clerk sign-in/sign-up panels. The legacy `/auth/callback` route now redirects back to the Clerk auth entry.
+- Adapted notification email settings to Cloudflare Email Service semantics. The UI no longer asks for SMTP host, port, username, password, TLS, or SSL; it keeps only enabled, from email, from name, reply-to, and test email.
+- Preserved permission-sensitive behavior on the frontend: admin-only settings are not cached or fabricated on 403, and unsupported removed features throw explicit `Unimplemented` errors instead of silently succeeding.
+
+Compatibility notes and known gaps:
+
+- `@clerk/react` was added to `web/package.json`, but `web/pnpm-lock.yaml` was not updated in this run because Corepack needed to write outside the workspace and the escalation request could not be approved. Run `corepack pnpm install --lockfile-only` from `web/` in a normal dev shell.
+- The REST adapter temporarily enriches memo list/detail/comment responses by fetching attachments, relations, and reactions per memo because the Worker does not yet inline those fields. This is compatible but not efficient; move this aggregation to Worker routes before production.
+- The REST adapter performs conservative client-side filtering for existing CEL-like memo filters. This prevents obvious visibility/creator drift in the UI, but server-side filtering must be implemented in Worker/D1 for correct pagination and archived memo support.
+- Built-in password auth, built-in OAuth IdPs, PATs, webhooks, linked identities, and inbox notifications remain intentionally removed or not yet implemented in the Worker backend. Their UI callers now receive explicit unsupported responses or empty lists where non-critical.
+
+Recommended next frontend/backend follow-ups:
+
+- Install frontend dependencies and update the lockfile.
+- Add Worker support for server-side memo filters: creator, state, visibility, content search, tags, pinned, and property flags.
+- Add Worker response aggregation for memo attachments, relations, and reactions.
+- Add archived memo list support or remove/archive UI routes from the Cloudflare edition.
+- Add frontend tests for Clerk auth initialization, REST adapter error mapping, polling invalidation, attachment upload, and notification email settings.

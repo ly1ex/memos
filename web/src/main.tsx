@@ -7,8 +7,9 @@ import { Toaster } from "react-hot-toast";
 import { RouterProvider } from "react-router-dom";
 import "./i18n";
 import "./index.css";
+import { refreshAccessToken } from "@/api/client";
+import { ClerkAuthProvider, useFrontendAuthState } from "@/clerk-auth";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { refreshAccessToken } from "@/connect";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { InstanceProvider, useInstance } from "@/contexts/InstanceContext";
 import { ViewProvider } from "@/contexts/ViewContext";
@@ -25,30 +26,44 @@ applyLocaleEarly();
 
 // Inner component that initializes contexts
 function AppInitializer({ children }: { children: React.ReactNode }) {
+  const { ready: frontendAuthReady, sessionKey: frontendAuthSessionKey } = useFrontendAuthState();
   const { isInitialized: authInitialized, initialize: initAuth, currentUser } = useAuth();
   const { isInitialized: instanceInitialized, initialize: initInstance } = useInstance();
-  const initStartedRef = useRef(false);
+  const instanceInitStartedRef = useRef(false);
+  const authInitSessionKeyRef = useRef<string | null>(null);
+  const isClerkCallbackPath = window.location.pathname === "/auth/sso-callback" || window.location.pathname === "/auth/signup/sso-callback";
 
-  // Initialize on mount - run in parallel for better performance
+  // Initialize public instance metadata once Clerk has settled enough to avoid
+  // racing app boot with Clerk's own callback bootstrap.
   useEffect(() => {
-    if (initStartedRef.current) return;
-    initStartedRef.current = true;
+    if (!frontendAuthReady) return;
+    if (instanceInitStartedRef.current) return;
+    instanceInitStartedRef.current = true;
 
-    const init = async () => {
-      await Promise.all([initInstance(), initAuth()]);
-    };
-    init();
-  }, [initAuth, initInstance]);
+    initInstance();
+  }, [frontendAuthReady, initInstance]);
+
+  // Reinitialize app auth whenever Clerk transitions between signed-out and
+  // signed-in sessions. During Clerk's routed callback page, let the Clerk
+  // component render and consume the callback before calling the Worker.
+  useEffect(() => {
+    if (!frontendAuthReady) return;
+    if (isClerkCallbackPath && !frontendAuthSessionKey.startsWith("signed-in:")) return;
+    if (authInitSessionKeyRef.current === frontendAuthSessionKey) return;
+    authInitSessionKeyRef.current = frontendAuthSessionKey;
+
+    initAuth();
+  }, [frontendAuthReady, frontendAuthSessionKey, initAuth, isClerkCallbackPath]);
 
   // Proactively refresh token on window focus to prevent 401 errors
   // Only enabled when user is authenticated
   // Related: https://github.com/usememos/memos/issues/5589
   useTokenRefreshOnFocus(refreshAccessToken, !!currentUser);
 
-  // Live refresh: listen for memo changes via SSE and invalidate caches.
+  // Live refresh: Worker edition uses polling instead of SSE.
   useLiveMemoRefresh();
 
-  if (!authInitialized || !instanceInitialized) {
+  if (!instanceInitialized || (!authInitialized && !isClerkCallbackPath)) {
     return null;
   }
 
@@ -57,21 +72,23 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
 
 function Main() {
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <InstanceProvider>
-          <AuthProvider>
-            <ViewProvider>
-              <AppInitializer>
-                <RouterProvider router={router} />
-                <Toaster position="top-right" />
-              </AppInitializer>
-            </ViewProvider>
-          </AuthProvider>
-        </InstanceProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
-    </ErrorBoundary>
+    <ClerkAuthProvider>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <InstanceProvider>
+            <AuthProvider>
+              <ViewProvider>
+                <AppInitializer>
+                  <RouterProvider router={router} />
+                  <Toaster position="top-right" />
+                </AppInitializer>
+              </ViewProvider>
+            </AuthProvider>
+          </InstanceProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
+      </ErrorBoundary>
+    </ClerkAuthProvider>
   );
 }
 

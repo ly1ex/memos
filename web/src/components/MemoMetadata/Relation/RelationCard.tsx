@@ -1,5 +1,5 @@
+import type { MemoRelation_Memo } from "@/api/types";
 import MemoSnippetLink from "@/components/MemoView/components/MemoSnippetLink";
-import type { MemoRelation_Memo } from "@/types/proto/api/v1/memo_service_pb";
 
 interface RelationCardProps {
   memo: MemoRelation_Memo;

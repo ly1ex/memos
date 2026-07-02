@@ -1,19 +1,19 @@
-import { create } from "@bufbuild/protobuf";
 import { isEqual, uniq } from "lodash-es";
 import { CheckIcon, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import {
+  createMessage,
+  InstanceSetting_Key,
+  InstanceSetting_MemoRelatedSetting,
+  InstanceSetting_MemoRelatedSettingSchema,
+  InstanceSettingSchema,
+} from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useInstance } from "@/contexts/InstanceContext";
-import {
-  InstanceSetting_Key,
-  InstanceSetting_MemoRelatedSetting,
-  InstanceSetting_MemoRelatedSettingSchema,
-  InstanceSettingSchema,
-} from "@/types/proto/api/v1/instance_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import SettingGroup from "./SettingGroup";
 import { SettingList, SettingListItem, SettingPanel } from "./SettingList";
@@ -32,7 +32,7 @@ const MemoRelatedSettings = () => {
   }, [originalSetting]);
 
   const updatePartialSetting = (partial: Partial<InstanceSetting_MemoRelatedSetting>) => {
-    const newInstanceMemoRelatedSetting = create(InstanceSetting_MemoRelatedSettingSchema, {
+    const newInstanceMemoRelatedSetting = createMessage(InstanceSetting_MemoRelatedSettingSchema, {
       ...memoRelatedSetting,
       ...partial,
     });
@@ -57,7 +57,7 @@ const MemoRelatedSettings = () => {
 
     await saveInstanceSetting({
       key: InstanceSetting_Key.MEMO_RELATED,
-      setting: create(InstanceSettingSchema, {
+      setting: createMessage(InstanceSettingSchema, {
         name: buildInstanceSettingName(InstanceSetting_Key.MEMO_RELATED),
         value: {
           case: "memoRelatedSetting",

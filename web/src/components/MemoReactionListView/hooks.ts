@@ -1,11 +1,10 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { memoServiceClient } from "@/connect";
+import { memoApi } from "@/api/client";
+import type { Memo, Reaction, User } from "@/api/types";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { memoKeys } from "@/hooks/useMemoQueries";
 import { useUsersByNames } from "@/hooks/useUserQueries";
-import type { Memo, Reaction } from "@/types/proto/api/v1/memo_service_pb";
-import type { User } from "@/types/proto/api/v1/user_service_pb";
 
 export type ReactionGroup = Map<string, User[]>;
 
@@ -48,15 +47,15 @@ export const useReactionActions = ({ memo, onComplete }: UseReactionActionsOptio
         const reactions = memo.reactions.filter(
           (reaction) => reaction.reactionType === reactionType && reaction.creator === currentUser.name,
         );
-        await Promise.all(reactions.map((reaction) => memoServiceClient.deleteMemoReaction({ name: reaction.name })));
+        await Promise.all(reactions.map((reaction) => memoApi.deleteMemoReaction({ name: reaction.name })));
       } else {
-        await memoServiceClient.upsertMemoReaction({
+        await memoApi.upsertMemoReaction({
           name: memo.name,
           reaction: { contentId: memo.name, reactionType },
         });
       }
       // Refetch the memo to get updated reactions and invalidate cache
-      const updatedMemo = await memoServiceClient.getMemo({ name: memo.name });
+      const updatedMemo = await memoApi.getMemo({ name: memo.name });
       queryClient.setQueryData(memoKeys.detail(memo.name), updatedMemo);
       queryClient.invalidateQueries({ queryKey: memoKeys.lists() });
       // If this memo is a comment, refresh the parent's comments list so the comment's reactions update in the UI

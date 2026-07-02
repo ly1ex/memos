@@ -105,15 +105,99 @@ describe("worker app", () => {
   });
 
   it("protects sync and data routes with Clerk auth", async () => {
-    for (const path of ["/api/v1/users:sync", "/api/v1/memos", "/api/v1/attachments"]) {
-      const response = await app.request(path, { method: path.endsWith("sync") ? "POST" : "GET" }, testEnv);
+    for (const route of [
+      { path: "/api/v1/users:sync", method: "POST" },
+      { path: "/api/v1/attachments", method: "GET" },
+      { path: "/api/v1/instance/settings/notification:testEmail", method: "POST" }
+    ]) {
+      const response = await app.request(route.path, { method: route.method }, testEnv);
 
-      expect(response.status, path).toBe(401);
-      await expect(response.json(), path).resolves.toMatchObject({
+      expect(response.status, route.path).toBe(401);
+      await expect(response.json(), route.path).resolves.toMatchObject({
         error: {
           code: "unauthenticated"
         }
       });
     }
   });
+
+  it("keeps legacy colon routes reachable", async () => {
+    const batchResponse = await app.request(
+      "/api/v1/users:batchGet",
+      {
+        method: "POST",
+        body: JSON.stringify({ usernames: [] })
+      },
+      testEnv
+    );
+    expect(batchResponse.status).toBe(200);
+
+    const restStatsResponse = await app.request("/api/v1/users/stats", {}, testEnv);
+    expect(restStatsResponse.status).toBe(401);
+
+    const statsResponse = await app.request("/api/v1/users:stats", {}, testEnv);
+    expect(statsResponse.status).toBe(401);
+  });
+
+  it("serves per-user stats on the REST path", async () => {
+    const env = {
+      ...testEnv,
+      DB: userStatsDb("target", 7)
+    } satisfies Env;
+
+    const response = await app.request("/api/v1/users/target/stats", {}, env);
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      data: {
+        name: "users/target",
+        memoCount: 7
+      }
+    });
+  });
+
+  it("requires admin auth before reading sensitive instance settings", async () => {
+    const response = await app.request("/api/v1/instance/settings/NOTIFICATION", {}, testEnv);
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toMatchObject({
+      error: {
+        code: "unauthenticated"
+      }
+    });
+  });
 });
+
+function userStatsDb(username: string, memoCount: number): D1Database {
+  return {
+    prepare(sql: string) {
+      return {
+        bind(...values: unknown[]) {
+          return {
+            async first() {
+              if (sql.includes('FROM "user"')) {
+                return values[0] === username
+                  ? {
+                      id: 1,
+                      clerkUserId: "clerk_target",
+                      username,
+                      email: "",
+                      nickname: username,
+                      avatarUrl: "",
+                      role: "USER",
+                      rowStatus: "NORMAL",
+                      createdTs: 1,
+                      updatedTs: 1
+                    }
+                  : null;
+              }
+              if (sql.includes("FROM memo")) {
+                return { memoCount };
+              }
+              return null;
+            }
+          };
+        }
+      };
+    }
+  } as unknown as D1Database;
+}

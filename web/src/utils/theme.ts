@@ -25,8 +25,8 @@ const THEME_CONTENT: Record<ResolvedTheme, string | null> = {
 };
 
 const THEME_COLORS: Record<ResolvedTheme, string> = {
-  default: "#faf9f5",
-  "default-dark": "#1d1f23",
+  default: "#f9f9f9",
+  "default-dark": "#17171c",
   paper: "#f5ede4",
 };
 

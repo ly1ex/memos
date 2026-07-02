@@ -1,12 +1,10 @@
-import { create } from "@bufbuild/protobuf";
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useRef, useState } from "react";
-import { instanceServiceClient } from "@/connect";
+import { instanceApi } from "@/api/client";
 import {
+  createMessage,
   InstanceProfile,
   InstanceProfileSchema,
   InstanceSetting,
-  InstanceSetting_AISetting,
-  InstanceSetting_AISettingSchema,
   InstanceSetting_GeneralSetting,
   InstanceSetting_GeneralSettingSchema,
   InstanceSetting_Key,
@@ -14,9 +12,7 @@ import {
   InstanceSetting_MemoRelatedSettingSchema,
   InstanceSetting_NotificationSetting,
   InstanceSetting_NotificationSettingSchema,
-  InstanceSetting_StorageSetting,
-  InstanceSetting_StorageSettingSchema,
-} from "@/types/proto/api/v1/instance_service_pb";
+} from "@/api/types";
 
 const instanceSettingNamePrefix = "instance/settings/";
 
@@ -39,9 +35,7 @@ interface InstanceState {
 interface InstanceContextValue extends InstanceState {
   generalSetting: InstanceSetting_GeneralSetting;
   memoRelatedSetting: InstanceSetting_MemoRelatedSetting;
-  storageSetting: InstanceSetting_StorageSetting;
   notificationSetting: InstanceSetting_NotificationSetting;
-  aiSetting: InstanceSetting_AISetting;
   initialize: () => Promise<void>;
   fetchSetting: (key: InstanceSetting_Key) => Promise<void>;
   fetchSettings: (keys: InstanceSetting_Key[]) => Promise<void>;
@@ -52,7 +46,7 @@ const InstanceContext = createContext<InstanceContextValue | null>(null);
 
 export function InstanceProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<InstanceState>({
-    profile: create(InstanceProfileSchema, {}),
+    profile: createMessage(InstanceProfileSchema, {}),
     settings: [],
     isInitialized: false,
     isLoading: true,
@@ -67,7 +61,7 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
     if (setting?.value.case === "generalSetting") {
       return setting.value.value;
     }
-    return create(InstanceSetting_GeneralSettingSchema, {});
+    return createMessage(InstanceSetting_GeneralSettingSchema, {});
   }, [state.settings]);
 
   const memoRelatedSetting = useMemo((): InstanceSetting_MemoRelatedSetting => {
@@ -75,15 +69,7 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
     if (setting?.value.case === "memoRelatedSetting") {
       return setting.value.value;
     }
-    return create(InstanceSetting_MemoRelatedSettingSchema, {});
-  }, [state.settings]);
-
-  const storageSetting = useMemo((): InstanceSetting_StorageSetting => {
-    const setting = state.settings.find((s) => s.name === `${instanceSettingNamePrefix}STORAGE`);
-    if (setting?.value.case === "storageSetting") {
-      return setting.value.value;
-    }
-    return create(InstanceSetting_StorageSettingSchema, {});
+    return createMessage(InstanceSetting_MemoRelatedSettingSchema, {});
   }, [state.settings]);
 
   const notificationSetting = useMemo((): InstanceSetting_NotificationSetting => {
@@ -91,23 +77,15 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
     if (setting?.value.case === "notificationSetting") {
       return setting.value.value;
     }
-    return create(InstanceSetting_NotificationSettingSchema, {});
-  }, [state.settings]);
-
-  const aiSetting = useMemo((): InstanceSetting_AISetting => {
-    const setting = state.settings.find((s) => s.name === `${instanceSettingNamePrefix}AI`);
-    if (setting?.value.case === "aiSetting") {
-      return setting.value.value;
-    }
-    return create(InstanceSetting_AISettingSchema, {});
+    return createMessage(InstanceSetting_NotificationSettingSchema, {});
   }, [state.settings]);
 
   const initialize = useCallback(async () => {
     setState((prev) => ({ ...prev, isLoading: true }));
     try {
-      const profile = await instanceServiceClient.getInstanceProfile({});
+      const profile = await instanceApi.getInstanceProfile({});
 
-      const settingsResponse = await instanceServiceClient.batchGetInstanceSettings({
+      const settingsResponse = await instanceApi.batchGetInstanceSettings({
         names: [buildInstanceSettingName(InstanceSetting_Key.GENERAL), buildInstanceSettingName(InstanceSetting_Key.MEMO_RELATED)],
       });
       for (const setting of settingsResponse.settings) {
@@ -142,7 +120,7 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await instanceServiceClient.batchGetInstanceSettings({ names });
+      const response = await instanceApi.batchGetInstanceSettings({ names });
       const fetchedNames = new Set(response.settings.map((setting) => setting.name));
       setState((prev) => ({
         ...prev,
@@ -163,7 +141,7 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
     }
     fetchedSettingsRef.current.add(name);
     try {
-      const setting = await instanceServiceClient.getInstanceSetting({ name });
+      const setting = await instanceApi.getInstanceSetting({ name });
       setState((prev) => ({
         ...prev,
         settings: [...prev.settings.filter((s) => s.name !== setting.name), setting],
@@ -175,7 +153,7 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateSetting = useCallback(async (setting: InstanceSetting) => {
-    const updatedSetting = await instanceServiceClient.updateInstanceSetting({ setting });
+    const updatedSetting = await instanceApi.updateInstanceSetting({ setting });
     setState((prev) => ({
       ...prev,
       settings: [...prev.settings.filter((s) => s.name !== updatedSetting.name), updatedSetting],
@@ -188,26 +166,13 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
       ...state,
       generalSetting,
       memoRelatedSetting,
-      storageSetting,
       notificationSetting,
-      aiSetting,
       initialize,
       fetchSetting,
       fetchSettings,
       updateSetting,
     }),
-    [
-      state,
-      generalSetting,
-      memoRelatedSetting,
-      storageSetting,
-      notificationSetting,
-      aiSetting,
-      initialize,
-      fetchSetting,
-      fetchSettings,
-      updateSetting,
-    ],
+    [state, generalSetting, memoRelatedSetting, notificationSetting, initialize, fetchSetting, fetchSettings, updateSetting],
   );
 
   return <InstanceContext.Provider value={value}>{children}</InstanceContext.Provider>;

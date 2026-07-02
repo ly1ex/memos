@@ -1,5 +1,5 @@
+import type { Attachment } from "@/api/types";
 import { cn } from "@/lib/utils";
-import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
 import { getAttachmentThumbnailUrl, getAttachmentType, getAttachmentUrl } from "@/utils/attachment";
 
 interface AttachmentCardProps {

@@ -61,10 +61,8 @@ export const getAccessToken = (): string | null => {
           accessToken = storedToken;
           tokenExpiresAt = expiresAt;
         }
-        // Do NOT remove expired tokens here. getRequestToken() in connect.ts calls
-        // hasStoredToken() to decide whether to attempt a refresh — if we eagerly delete
-        // the expired token, it returns null immediately, skipping the refresh and sending
-        // the request without credentials.
+        // Do NOT remove expired tokens here. Legacy password-auth callers may still
+        // inspect stored token state before deciding whether to make a request.
         // clearAccessToken() handles proper cleanup after a confirmed auth failure or logout.
       }
     } catch (e) {

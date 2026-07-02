@@ -1,11 +1,8 @@
-import { InstanceSetting_Key } from "@/types/proto/api/v1/instance_service_pb";
-import { Visibility } from "@/types/proto/api/v1/memo_service_pb";
-import { UserSetting_Key } from "@/types/proto/api/v1/user_service_pb";
+import { InstanceSetting_Key, UserSetting_Key, Visibility } from "@/api/types";
 
 export const instanceSettingNamePrefix = "instance/settings/";
 export const userNamePrefix = "users/";
 export const memoNamePrefix = "memos/";
-export const identityProviderNamePrefix = "identity-providers/";
 
 export const buildMemoCreatorFilter = (name: string) => {
   if (!name) {
@@ -17,10 +14,6 @@ export const buildMemoCreatorFilter = (name: string) => {
 
 export const extractMemoIdFromName = (name: string) => {
   return name.split(memoNamePrefix).pop() || "";
-};
-
-export const extractIdentityProviderUidFromName = (name: string) => {
-  return name.split(identityProviderNamePrefix).pop() || "";
 };
 
 // Helper function to convert InstanceSetting_Key enum value to string name

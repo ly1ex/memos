@@ -1,6 +1,7 @@
+import { ClerkSignInPanel } from "@/clerk-auth";
 import AuthFooter from "@/components/AuthFooter";
-import PasswordSignInForm from "@/components/PasswordSignInForm";
 import { useInstance } from "@/contexts/InstanceContext";
+import { ROUTES } from "@/router/routes";
 
 const AdminSignIn = () => {
   const { generalSetting: instanceGeneralSetting } = useInstance();
@@ -13,7 +14,7 @@ const AdminSignIn = () => {
           <p className="ml-2 text-5xl text-foreground opacity-80">{instanceGeneralSetting.customProfile?.title || "Memos"}</p>
         </div>
         <p className="w-full text-xl font-medium text-muted-foreground">Sign in with admin accounts</p>
-        <PasswordSignInForm />
+        <ClerkSignInPanel redirectUrl={ROUTES.HOME} />
       </div>
       <AuthFooter />
     </div>

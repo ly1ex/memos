@@ -1,16 +1,14 @@
-import { create } from "@bufbuild/protobuf";
-import { FieldMaskSchema } from "@bufbuild/protobuf/wkt";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import { userApi } from "@/api/client";
+import { createMessage, FieldMaskSchema, User, User_Role, UserSchema } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { userServiceClient } from "@/connect";
 import useLoading from "@/hooks/useLoading";
 import { handleError } from "@/lib/error";
-import { User, User_Role, UserSchema } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
 interface Props {
@@ -22,17 +20,17 @@ interface Props {
 
 function CreateUserDialog({ open, onOpenChange, user: initialUser, onSuccess }: Props) {
   const t = useTranslate();
-  const [user, setUser] = useState(
-    create(UserSchema, initialUser ? { name: initialUser.name, username: initialUser.username, role: initialUser.role } : {}),
+  const [user, setUser] = useState<User>(
+    createMessage<User>(UserSchema, initialUser ? { name: initialUser.name, username: initialUser.username, role: initialUser.role } : {}),
   );
   const requestState = useLoading(false);
   const isCreating = !initialUser;
 
   useEffect(() => {
     if (initialUser) {
-      setUser(create(UserSchema, { name: initialUser.name, username: initialUser.username, role: initialUser.role }));
+      setUser(createMessage<User>(UserSchema, { name: initialUser.name, username: initialUser.username, role: initialUser.role }));
     } else {
-      setUser(create(UserSchema, {}));
+      setUser(createMessage<User>(UserSchema, {}));
     }
   }, [initialUser]);
 
@@ -52,7 +50,7 @@ function CreateUserDialog({ open, onOpenChange, user: initialUser, onSuccess }: 
     try {
       requestState.setLoading();
       if (isCreating) {
-        await userServiceClient.createUser({ user });
+        await userApi.createUser({ user });
         toast.success("Create user successfully");
       } else {
         const updateMask = [];
@@ -65,8 +63,8 @@ function CreateUserDialog({ open, onOpenChange, user: initialUser, onSuccess }: 
         if (user.role !== initialUser?.role) {
           updateMask.push("role");
         }
-        const userToUpdate = create(UserSchema, { ...user, name: initialUser?.name ?? user.name });
-        await userServiceClient.updateUser({ user: userToUpdate, updateMask: create(FieldMaskSchema, { paths: updateMask }) });
+        const userToUpdate = createMessage<User>(UserSchema, { ...user, name: initialUser?.name ?? user.name });
+        await userApi.updateUser({ user: userToUpdate, updateMask: createMessage(FieldMaskSchema, { paths: updateMask }) });
         toast.success("Update user successfully");
       }
       requestState.setFinish();

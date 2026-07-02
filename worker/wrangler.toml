@@ -18,6 +18,8 @@ migrations_dir = "migrations"
 binding = "ATTACHMENTS"
 bucket_name = "memos-attachments"
 
+[[send_email]]
+name = "EMAIL"
+
 [triggers]
 crons = ["*/15 * * * *"]
-

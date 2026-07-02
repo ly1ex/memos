@@ -1,12 +1,14 @@
+import { Memo, State, Visibility } from "@/api/types";
+import DiaryModeSwitch from "@/components/DiaryModeSwitch";
 import MemoView from "@/components/MemoView";
 import PagedMemoList from "@/components/PagedMemoList";
 import { useView } from "@/contexts/ViewContext";
 import { useMemoFilters, useMemoSorting } from "@/hooks";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import { State } from "@/types/proto/api/v1/common_pb";
-import { Memo, Visibility } from "@/types/proto/api/v1/memo_service_pb";
+import { useTranslate } from "@/utils/i18n";
 
 const Explore = () => {
+  const t = useTranslate();
   const currentUser = useCurrentUser();
   const { compactMode } = useView();
 
@@ -30,15 +32,33 @@ const Explore = () => {
   });
 
   return (
-    <PagedMemoList
-      renderer={(memo: Memo) => (
-        <MemoView key={`${memo.name}-${memo.updateTime}`} memo={memo} showCreator showVisibility compact={compactMode} />
-      )}
-      listSort={listSort}
-      orderBy={orderBy}
-      filter={memoFilter}
-      showCreator
-    />
+    <section className="lumina-page lumina-discover-page">
+      <div className="lumina-page-hero">
+        <h1>{t("lumina.discover-title")}</h1>
+        <p>{t("lumina.discover-description")}</p>
+        <DiaryModeSwitch className="mt-7" size="sm" variant="latest-curated" />
+      </div>
+
+      <PagedMemoList
+        renderer={(memo: Memo) => (
+          <MemoView
+            key={`${memo.name}-${memo.updateTime}`}
+            className="lumina-discover-card"
+            memo={memo}
+            showCreator
+            showVisibility
+            compact={compactMode}
+          />
+        )}
+        className="lumina-discover-feed"
+        listClassName="lumina-discover-stack"
+        filtersClassName="lumina-filters"
+        listSort={listSort}
+        orderBy={orderBy}
+        filter={memoFilter}
+        showCreator
+      />
+    </section>
   );
 };
 

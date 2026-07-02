@@ -1,13 +1,13 @@
-import { timestampDate } from "@bufbuild/protobuf/wkt";
-import { ConnectError } from "@connectrpc/connect";
 import { CheckIcon, CopyIcon, LinkIcon, Loader2Icon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
+import { ApiError } from "@/api/errors";
+import type { MemoShare } from "@/api/types";
+import { timestampDate } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getShareUrl, useCreateMemoShare, useDeleteMemoShare, useMemoShares } from "@/hooks/useMemoShareQueries";
-import type { MemoShare } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
 type ExpiryOption = "never" | "1d" | "7d" | "30d";
@@ -49,7 +49,7 @@ function ShareLinkRow({ share, memoName }: ShareLinkRowProps) {
       await deleteShare.mutateAsync({ name: share.name, memoName });
       toast.success(t("memo.share.revoked"));
     } catch (e) {
-      toast.error((e as ConnectError).message || t("memo.share.revoke-failed"));
+      toast.error((e as ApiError).message || t("memo.share.revoke-failed"));
     }
   };
 
@@ -94,7 +94,7 @@ const MemoSharePanel = ({ open, onClose, memoName }: MemoSharePanelProps) => {
     try {
       await createShare.mutateAsync({ memoName, expireTime: getExpireDate(expiry) });
     } catch (e) {
-      toast.error((e as ConnectError).message || t("memo.share.create-failed"));
+      toast.error((e as ApiError).message || t("memo.share.create-failed"));
     }
   };
 

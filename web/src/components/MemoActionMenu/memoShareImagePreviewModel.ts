@@ -1,7 +1,6 @@
-import { timestampDate } from "@bufbuild/protobuf/wkt";
+import type { Memo, User } from "@/api/types";
+import { timestampDate } from "@/api/types";
 import { separateAttachments } from "@/components/MemoMetadata/Attachment/attachmentHelpers";
-import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
-import type { User } from "@/types/proto/api/v1/user_service_pb";
 import { type AttachmentVisualItem, buildAttachmentVisualItems, countLogicalAttachmentItems } from "@/utils/media-item";
 import { getMemoSharePreviewAvatarUrl } from "./memoShareImage";
 

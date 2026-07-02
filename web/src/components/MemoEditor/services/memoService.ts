@@ -1,11 +1,7 @@
-import { create } from "@bufbuild/protobuf";
-import { FieldMaskSchema, timestampDate, timestampFromDate } from "@bufbuild/protobuf/wkt";
 import { isEqual } from "lodash-es";
-import { memoServiceClient } from "@/connect";
-import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
-import { AttachmentSchema } from "@/types/proto/api/v1/attachment_service_pb";
-import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
-import { MemoSchema } from "@/types/proto/api/v1/memo_service_pb";
+import { memoApi } from "@/api/client";
+import type { Attachment, Memo } from "@/api/types";
+import { AttachmentSchema, createMessage, FieldMaskSchema, MemoSchema, timestampDate, timestampFromDate } from "@/api/types";
 import type { EditorState } from "../state";
 import { uploadService } from "./uploadService";
 
@@ -14,7 +10,7 @@ import { uploadService } from "./uploadService";
  * The backend only needs the attachment name to link it to a memo.
  */
 function toAttachmentReferences(attachments: Attachment[]): Attachment[] {
-  return attachments.map((a) => create(AttachmentSchema, { name: a.name }));
+  return attachments.map((a) => createMessage(AttachmentSchema, { name: a.name }));
 }
 
 function buildUpdateMask(
@@ -87,22 +83,22 @@ export const memoService = {
 
     // 2. Update existing memo
     if (options.memoName) {
-      const prevMemo = await memoServiceClient.getMemo({ name: options.memoName });
+      const prevMemo = await memoApi.getMemo({ name: options.memoName });
       const { mask, patch } = buildUpdateMask(prevMemo, state, allAttachments);
 
       if (mask.size === 0) {
         return { memoName: prevMemo.name, hasChanges: false };
       }
 
-      const memo = await memoServiceClient.updateMemo({
-        memo: create(MemoSchema, patch as Record<string, unknown>),
-        updateMask: create(FieldMaskSchema, { paths: Array.from(mask) }),
+      const memo = await memoApi.updateMemo({
+        memo: createMessage(MemoSchema, patch as Record<string, unknown>),
+        updateMask: createMessage(FieldMaskSchema, { paths: Array.from(mask) }),
       });
       return { memoName: memo.name, hasChanges: true };
     }
 
     // 3. Create new memo or comment
-    const memoData = create(MemoSchema, {
+    const memoData = createMessage(MemoSchema, {
       content: state.content,
       visibility: state.metadata.visibility,
       attachments: toAttachmentReferences(allAttachments),
@@ -113,11 +109,11 @@ export const memoService = {
     });
 
     const memo = options.parentMemoName
-      ? await memoServiceClient.createMemoComment({
+      ? await memoApi.createMemoComment({
           name: options.parentMemoName,
           comment: memoData,
         })
-      : await memoServiceClient.createMemo({ memo: memoData });
+      : await memoApi.createMemo({ memo: memoData });
 
     return { memoName: memo.name, hasChanges: true };
   },

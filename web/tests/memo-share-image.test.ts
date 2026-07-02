@@ -1,5 +1,5 @@
-import { create } from "@bufbuild/protobuf";
 import { describe, expect, it } from "vitest";
+import { AttachmentSchema, createMessage, MemoSchema, type Attachment, type Memo } from "@/api/types";
 import {
   buildMemoShareImageFileName,
   getMemoShareDialogWidth,
@@ -8,11 +8,9 @@ import {
   getMemoShareRenderWidth,
 } from "@/components/MemoActionMenu/memoShareImage";
 import { buildMemoShareImagePreviewModel } from "@/components/MemoActionMenu/memoShareImagePreviewModel";
-import { AttachmentSchema, type Attachment } from "@/types/proto/api/v1/attachment_service_pb";
-import { MemoSchema, type Memo } from "@/types/proto/api/v1/memo_service_pb";
 
 const buildMemo = (overrides: Partial<Memo> = {}) =>
-  create(MemoSchema, {
+  createMessage<Memo>(MemoSchema, {
     name: "memos/test",
     content: "hello",
     tags: [],
@@ -21,7 +19,7 @@ const buildMemo = (overrides: Partial<Memo> = {}) =>
   });
 
 const buildAttachment = (overrides: Partial<Attachment>) =>
-  create(AttachmentSchema, {
+  createMessage<Attachment>(AttachmentSchema, {
     name: "attachments/test",
     filename: "test.bin",
     type: "application/octet-stream",

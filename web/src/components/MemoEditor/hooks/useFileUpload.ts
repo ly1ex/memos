@@ -1,6 +1,5 @@
-import { create } from "@bufbuild/protobuf";
 import { useRef } from "react";
-import { type MotionMedia, MotionMediaFamily, MotionMediaRole, MotionMediaSchema } from "@/types/proto/api/v1/attachment_service_pb";
+import { createMessage, type MotionMedia, MotionMediaFamily, MotionMediaRole, MotionMediaSchema } from "@/api/types";
 import type { LocalFile } from "../types/attachment";
 import { useBlobUrls } from "./useBlobUrls";
 
@@ -81,7 +80,7 @@ const pairAppleLivePhotoFiles = (localFiles: LocalFile[]): LocalFile[] => {
 };
 
 const buildLocalMotionMedia = (groupId: string, role: MotionMediaRole): MotionMedia =>
-  create(MotionMediaSchema, {
+  createMessage(MotionMediaSchema, {
     family: MotionMediaFamily.APPLE_LIVE_PHOTO,
     role,
     groupId,

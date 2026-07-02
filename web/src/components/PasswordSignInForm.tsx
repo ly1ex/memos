@@ -1,11 +1,11 @@
-import { timestampDate } from "@bufbuild/protobuf/wkt";
 import { LoaderIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
+import { authApi } from "@/api/client";
+import { timestampDate } from "@/api/types";
 import { setAccessToken } from "@/auth-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { authServiceClient } from "@/connect";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInstance } from "@/contexts/InstanceContext";
 import useLoading from "@/hooks/useLoading";
@@ -53,7 +53,7 @@ function PasswordSignInForm({ redirectPath }: PasswordSignInFormProps) {
 
     try {
       actionBtnLoadingState.setLoading();
-      const response = await authServiceClient.signIn({
+      const response = await authApi.signIn({
         credentials: {
           case: "passwordCredentials",
           value: { username, password },

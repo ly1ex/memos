@@ -1,10 +1,9 @@
+import { Memo, State } from "@/api/types";
 import MemoView from "@/components/MemoView";
 import PagedMemoList from "@/components/PagedMemoList";
 import { useView } from "@/contexts/ViewContext";
 import { useMemoFilters, useMemoSorting } from "@/hooks";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import { State } from "@/types/proto/api/v1/common_pb";
-import { Memo } from "@/types/proto/api/v1/memo_service_pb";
 
 const Archived = () => {
   const user = useCurrentUser();

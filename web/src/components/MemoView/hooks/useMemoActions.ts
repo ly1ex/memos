@@ -1,5 +1,5 @@
+import type { Memo } from "@/api/types";
 import { useUpdateMemo } from "@/hooks/useMemoQueries";
-import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 
 export const useMemoActions = (memo: Memo) => {
   const { mutateAsync: updateMemo } = useUpdateMemo();

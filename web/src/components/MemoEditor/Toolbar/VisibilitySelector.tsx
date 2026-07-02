@@ -1,7 +1,7 @@
 import { CheckIcon, ChevronDownIcon } from "lucide-react";
+import { Visibility } from "@/api/types";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import VisibilityIcon from "@/components/VisibilityIcon";
-import { Visibility } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import type { VisibilitySelectorProps } from "../types";
 

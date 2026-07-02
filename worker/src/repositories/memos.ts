@@ -11,6 +11,7 @@ export interface Memo {
   id: number;
   uid: string;
   creatorId: number;
+  creatorUsername?: string;
   content: string;
   visibility: MemoVisibility;
   rowStatus: MemoRowStatus;
@@ -24,6 +25,7 @@ interface MemoRow {
   id: number;
   uid: string;
   creatorId: number;
+  creatorUsername: string | null;
   content: string;
   visibility: MemoVisibility;
   rowStatus: MemoRowStatus;
@@ -34,6 +36,7 @@ interface MemoRow {
 }
 
 export interface CreateMemoInput {
+  uid?: string;
   creatorId: number;
   content: string;
   visibility: MemoVisibility;
@@ -51,6 +54,12 @@ export interface ListMemosInput {
   cursor?: string | null;
 }
 
+export interface ListVisibleMemosInput {
+  viewerId?: number;
+  pageSize: number;
+  cursor?: string | null;
+}
+
 export interface ListPublicMemosInput {
   creatorId?: number;
   limit: number;
@@ -61,6 +70,7 @@ const memoSelect = `
     id,
     uid,
     creator_id AS creatorId,
+    (SELECT username FROM "user" WHERE "user".id = memo.creator_id) AS creatorUsername,
     content,
     visibility,
     row_status AS rowStatus,
@@ -74,7 +84,7 @@ const memoSelect = `
 export async function createMemo(db: D1Database, input: CreateMemoInput): Promise<Memo> {
   validateMemoContent(input.content);
   const now = nowTs();
-  const uid = createUid("memo");
+  const uid = validateMemoUid(input.uid) ?? createUid("memo");
   const payloadJson = JSON.stringify(buildMemoPayload(input.content));
   const row = await db
     .prepare(
@@ -94,6 +104,7 @@ export async function createMemo(db: D1Database, input: CreateMemoInput): Promis
           id,
           uid,
           creator_id AS creatorId,
+          (SELECT username FROM "user" WHERE "user".id = creator_id) AS creatorUsername,
           content,
           visibility,
           row_status AS rowStatus,
@@ -116,6 +127,39 @@ export async function listMemos(db: D1Database, input: ListMemosInput): Promise<
   const cursor = decodeCreatedCursor(input.cursor ?? null);
   const where = ["creator_id = ?", "row_status = 'NORMAL'"];
   const bindings: unknown[] = [input.creatorId];
+
+  if (cursor) {
+    where.push("(created_ts < ? OR (created_ts = ? AND id < ?))");
+    bindings.push(cursor.createdTs, cursor.createdTs, cursor.id);
+  }
+
+  bindings.push(input.pageSize + 1);
+  const result = await db
+    .prepare(
+      `
+        ${memoSelect}
+        WHERE ${where.join(" AND ")}
+        ORDER BY created_ts DESC, id DESC
+        LIMIT ?
+      `
+    )
+    .bind(...bindings)
+    .all<MemoRow>();
+
+  return pageFromLimit((result.results ?? []).map(toMemo), input.pageSize);
+}
+
+export async function listVisibleMemos(db: D1Database, input: ListVisibleMemosInput): Promise<CursorPage<Memo>> {
+  const cursor = decodeCreatedCursor(input.cursor ?? null);
+  const where = ["row_status = 'NORMAL'"];
+  const bindings: unknown[] = [];
+
+  if (input.viewerId === undefined) {
+    where.push("visibility = 'PUBLIC'");
+  } else {
+    where.push("(creator_id = ? OR visibility IN ('PUBLIC', 'PROTECTED'))");
+    bindings.push(input.viewerId);
+  }
 
   if (cursor) {
     where.push("(created_ts < ? OR (created_ts = ? AND id < ?))");
@@ -168,6 +212,11 @@ export async function getMemoById(db: D1Database, id: number): Promise<Memo | nu
   return row ? toMemo(row) : null;
 }
 
+export async function getMemoByUid(db: D1Database, uid: string): Promise<Memo | null> {
+  const row = await db.prepare(`${memoSelect} WHERE uid = ? LIMIT 1`).bind(uid).first<MemoRow>();
+  return row ? toMemo(row) : null;
+}
+
 export async function updateMemo(db: D1Database, id: number, input: UpdateMemoInput): Promise<Memo | null> {
   const assignments: string[] = [];
   const bindings: unknown[] = [];
@@ -207,6 +256,7 @@ export async function updateMemo(db: D1Database, id: number, input: UpdateMemoIn
           id,
           uid,
           creator_id AS creatorId,
+          (SELECT username FROM "user" WHERE "user".id = creator_id) AS creatorUsername,
           content,
           visibility,
           row_status AS rowStatus,
@@ -233,6 +283,7 @@ export async function archiveMemo(db: D1Database, id: number): Promise<Memo | nu
           id,
           uid,
           creator_id AS creatorId,
+          (SELECT username FROM "user" WHERE "user".id = creator_id) AS creatorUsername,
           content,
           visibility,
           row_status AS rowStatus,
@@ -264,11 +315,22 @@ function validateMemoContent(content: string): void {
   }
 }
 
+function validateMemoUid(uid: string | undefined): string | undefined {
+  if (uid === undefined || uid === "") {
+    return undefined;
+  }
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(uid)) {
+    throw new HttpError(400, "bad_request", "Invalid memo id");
+  }
+  return uid;
+}
+
 function toMemo(row: MemoRow): Memo {
   return {
     id: row.id,
     uid: row.uid,
     creatorId: row.creatorId,
+    creatorUsername: row.creatorUsername ?? undefined,
     content: row.content,
     visibility: row.visibility,
     rowStatus: row.rowStatus,

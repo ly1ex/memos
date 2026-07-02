@@ -4,6 +4,7 @@ import type { AppEnv } from "../env";
 import { HttpError } from "../http/errors";
 import { ok } from "../http/responses";
 import { getSharedMemo } from "../repositories/memo-shares";
+import { toMemoResponse } from "../serializers/memos";
 import { toMemoShareResponse } from "../serializers/shares";
 
 export const shareRoutes = new Hono<AppEnv>();
@@ -17,8 +18,7 @@ shareRoutes.get("/:shareId", async (c) => {
   return c.json(
     ok({
       share: toMemoShareResponse(shared.share),
-      memo: shared.memo
+      memo: toMemoResponse(shared.memo)
     })
   );
 });
-

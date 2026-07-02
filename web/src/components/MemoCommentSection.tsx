@@ -1,11 +1,11 @@
 import { LoaderCircleIcon, MessageCircleIcon } from "lucide-react";
 import { useState } from "react";
+import type { Memo } from "@/api/types";
 import MemoEditor from "@/components/MemoEditor";
 import MemoView from "@/components/MemoView";
 import { Button } from "@/components/ui/button";
 import { extractMemoIdFromName } from "@/helpers/resource-names";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
 interface Props {

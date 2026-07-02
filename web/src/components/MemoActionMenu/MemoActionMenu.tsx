@@ -14,6 +14,7 @@ import {
   TrashIcon,
 } from "lucide-react";
 import { useState } from "react";
+import { State } from "@/api/types";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +26,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { State } from "@/types/proto/api/v1/common_pb";
 import { useTranslate } from "@/utils/i18n";
 import { countTasks } from "@/utils/markdown-manipulation";
 import { useMemoActionHandlers } from "./hooks";

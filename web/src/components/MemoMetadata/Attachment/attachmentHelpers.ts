@@ -1,4 +1,4 @@
-import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
+import type { Attachment } from "@/api/types";
 import { getAttachmentType } from "@/utils/attachment";
 import { formatFileSize, getFileTypeLabel } from "@/utils/format";
 

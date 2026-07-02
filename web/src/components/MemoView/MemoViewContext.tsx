@@ -1,10 +1,8 @@
-import { timestampDate } from "@bufbuild/protobuf/wkt";
 import { createContext, useContext } from "react";
 import { useLocation } from "react-router-dom";
+import type { Memo, User } from "@/api/types";
+import { MemoRelation_Type, timestampDate } from "@/api/types";
 import { useView } from "@/contexts/ViewContext";
-import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
-import { MemoRelation_Type } from "@/types/proto/api/v1/memo_service_pb";
-import type { User } from "@/types/proto/api/v1/user_service_pb";
 import type { PreviewMediaItem } from "@/utils/media-item";
 import { RELATIVE_TIME_THRESHOLD_MS } from "./constants";
 

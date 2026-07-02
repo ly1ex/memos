@@ -1,5 +1,5 @@
-import type { MemoRelation } from "@/types/proto/api/v1/memo_service_pb";
-import { MemoRelation_Type } from "@/types/proto/api/v1/memo_service_pb";
+import type { MemoRelation } from "@/api/types";
+import { MemoRelation_Type } from "@/api/types";
 
 export type RelationDirection = "referencing" | "referenced";
 

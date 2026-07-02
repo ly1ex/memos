@@ -3,14 +3,14 @@ import copy from "copy-to-clipboard";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
 import { useLocation } from "react-router-dom";
+import type { Memo } from "@/api/types";
+import { State } from "@/api/types";
 import { useInstance } from "@/contexts/InstanceContext";
 import { memoKeys, useDeleteMemo, useUpdateMemo } from "@/hooks/useMemoQueries";
 import useNavigateTo from "@/hooks/useNavigateTo";
 import { userKeys } from "@/hooks/useUserQueries";
 import { handleError } from "@/lib/error";
 import { ROUTES } from "@/router/routes";
-import { State } from "@/types/proto/api/v1/common_pb";
-import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import { checkAllTasks, uncheckAllTasks } from "@/utils/markdown-task-actions";
 

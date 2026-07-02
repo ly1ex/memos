@@ -1,9 +1,9 @@
 import { GanttChartIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { Memo } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import MemoDetailSidebar from "./MemoDetailSidebar";
 
 interface Props {

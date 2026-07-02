@@ -1,13 +1,12 @@
-import { timestampDate } from "@bufbuild/protobuf/wkt";
 import dayjs from "dayjs";
 import { countBy } from "lodash-es";
 import { useMemo } from "react";
+import type { UserStats } from "@/api/types";
+import { State, timestampDate } from "@/api/types";
 import type { MemoExplorerContext } from "@/components/MemoExplorer";
 import { type MemoTimeBasis, useView } from "@/contexts/ViewContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useAllUserStats, useUserStats } from "@/hooks/useUserQueries";
-import { State } from "@/types/proto/api/v1/common_pb";
-import type { UserStats } from "@/types/proto/api/v1/user_service_pb";
 import type { StatisticsData } from "@/types/statistics";
 
 export interface FilteredMemoStats {
@@ -65,7 +64,7 @@ export const useFilteredMemoStats = (options: UseFilteredMemoStatsOptions = {}):
       const displayDates: string[] = [];
       for (const stats of allUserStats) {
         for (const [tag, count] of Object.entries(stats.tagCount ?? {})) {
-          tagCount[tag] = (tagCount[tag] ?? 0) + count;
+          tagCount[tag] = (tagCount[tag] ?? 0) + Number(count);
         }
         displayDates.push(
           ...timestampsForBasis(stats, timeBasis)

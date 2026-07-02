@@ -1,6 +1,7 @@
-import { timestampDate } from "@bufbuild/protobuf/wkt";
 import dayjs from "dayjs";
 import { useMemo } from "react";
+import type { Attachment } from "@/api/types";
+import { timestampDate } from "@/api/types";
 import {
   getAttachmentMetadata,
   isAudioAttachment,
@@ -8,7 +9,6 @@ import {
   isVideoAttachment,
 } from "@/components/MemoMetadata/Attachment/attachmentHelpers";
 import { useInfiniteAttachments } from "@/hooks/useAttachmentQueries";
-import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
 import { isMotionAttachment } from "@/utils/attachment";
 import { useTranslate } from "@/utils/i18n";
 import { type AttachmentVisualItem, buildAttachmentVisualItems } from "@/utils/media-item";

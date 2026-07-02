@@ -1,13 +1,13 @@
 import { BookmarkIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
+import type { User } from "@/api/types";
+import { Visibility } from "@/api/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNewMemo } from "@/contexts/NewMemoContext";
 import useNavigateTo from "@/hooks/useNavigateTo";
 import i18n from "@/i18n";
 import { cn } from "@/lib/utils";
-import { Visibility } from "@/types/proto/api/v1/memo_service_pb";
-import type { User } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import { convertVisibilityToString } from "@/utils/memo";
 import MemoActionMenu from "../../MemoActionMenu";

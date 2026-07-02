@@ -1,6 +1,6 @@
 import type { FC } from "react";
+import type { Location, Visibility } from "@/api/types";
 import { Button } from "@/components/ui/button";
-import type { Location, Visibility } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import { validationService } from "../services";
 import { useEditorContext, useEditorSelector } from "../state";
@@ -53,8 +53,8 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({ onSave, onCancel, memoNa
           </Button>
         )}
 
-        <Button onClick={onSave} disabled={!valid || isSaving}>
-          {isSaving ? t("editor.saving") : t("editor.save")}
+        <Button className={!memoName ? "lumina-post-button" : undefined} onClick={onSave} disabled={!valid || isSaving}>
+          {isSaving ? t("editor.saving") : memoName ? t("editor.save") : t("lumina.post")}
         </Button>
       </div>
     </div>

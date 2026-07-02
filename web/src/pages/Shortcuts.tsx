@@ -1,5 +1,3 @@
-import { create } from "@bufbuild/protobuf";
-import { FieldMaskSchema } from "@bufbuild/protobuf/wkt";
 import {
   CheckCircle2Icon,
   ClipboardCheckIcon,
@@ -20,6 +18,8 @@ import {
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useLocation, useNavigate } from "react-router-dom";
+import { shortcutApi } from "@/api/client";
+import { createMessage, FieldMaskSchema, Shortcut, ShortcutSchema } from "@/api/types";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,13 +27,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { shortcutServiceClient } from "@/connect";
 import { useAuth } from "@/contexts/AuthContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useLoading from "@/hooks/useLoading";
 import { handleError } from "@/lib/error";
 import { cn } from "@/lib/utils";
-import { Shortcut, ShortcutSchema } from "@/types/proto/api/v1/shortcut_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
 const shortcutExamples = [
@@ -175,7 +173,7 @@ const getShortcutId = (name: string): string => {
 };
 
 const createEmptyShortcut = () =>
-  create(ShortcutSchema, {
+  createMessage(ShortcutSchema, {
     name: "",
     title: "",
     filter: "",
@@ -251,7 +249,7 @@ const Shortcuts = () => {
 
     if (state.shortcut) {
       setDraft(
-        create(ShortcutSchema, {
+        createMessage(ShortcutSchema, {
           name: state.shortcut.name,
           title: state.shortcut.title,
           filter: state.shortcut.filter,
@@ -272,7 +270,7 @@ const Shortcuts = () => {
 
   const handleUseExample = (example: (typeof shortcutExamples)[number]) => {
     setDraft(
-      create(ShortcutSchema, {
+      createMessage(ShortcutSchema, {
         name: draft.name,
         title: draft.title || example.title,
         filter: example.filter,
@@ -293,7 +291,7 @@ const Shortcuts = () => {
 
   const handleEditShortcut = (shortcut: Shortcut) => {
     setDraft(
-      create(ShortcutSchema, {
+      createMessage(ShortcutSchema, {
         name: shortcut.name,
         title: shortcut.title,
         filter: shortcut.filter,
@@ -314,7 +312,7 @@ const Shortcuts = () => {
 
     try {
       validateState.setLoading();
-      await shortcutServiceClient.createShortcut({
+      await shortcutApi.createShortcut({
         parent: user.name,
         shortcut: { name: "", title: draft.title, filter: draft.filter },
         validateOnly: true,
@@ -343,7 +341,7 @@ const Shortcuts = () => {
 
     try {
       createState.setLoading();
-      await shortcutServiceClient.createShortcut({
+      await shortcutApi.createShortcut({
         parent: user.name,
         shortcut: { name: "", title: draft.title, filter: draft.filter },
       });
@@ -368,9 +366,9 @@ const Shortcuts = () => {
 
     try {
       updateState.setLoading();
-      await shortcutServiceClient.updateShortcut({
+      await shortcutApi.updateShortcut({
         shortcut: draft,
-        updateMask: create(FieldMaskSchema, { paths: ["title", "filter"] }),
+        updateMask: createMessage(FieldMaskSchema, { paths: ["title", "filter"] }),
       });
       await refetchSettings();
       updateState.setFinish();
@@ -398,7 +396,7 @@ const Shortcuts = () => {
     if (!deleteTarget) return;
 
     try {
-      await shortcutServiceClient.deleteShortcut({ name: deleteTarget.name });
+      await shortcutApi.deleteShortcut({ name: deleteTarget.name });
       await refetchSettings();
       toast.success(t("setting.shortcut.delete-success", { title: deleteTarget.title }));
       setDeleteTarget(undefined);

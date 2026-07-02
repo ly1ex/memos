@@ -1,8 +1,17 @@
-import { create } from "@bufbuild/protobuf";
 import { isEqual } from "lodash-es";
 import { EyeOffIcon, PaletteIcon, PlusIcon, TagIcon, TrashIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
+import {
+  ColorSchema,
+  createMessage,
+  UserSetting_Key,
+  type UserSetting_TagMetadata,
+  UserSetting_TagMetadataSchema,
+  type UserSetting_TagsSetting,
+  UserSetting_TagsSettingSchema,
+  UserSettingSchema,
+} from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,13 +22,6 @@ import { useTagCounts, useUpdateUserSetting } from "@/hooks/useUserQueries";
 import { colorToHex } from "@/lib/color";
 import { isValidTagPattern } from "@/lib/tag";
 import { cn } from "@/lib/utils";
-import {
-  UserSetting_Key,
-  UserSetting_TagMetadataSchema,
-  UserSetting_TagsSettingSchema,
-  UserSettingSchema,
-} from "@/types/proto/api/v1/user_service_pb";
-import { ColorSchema } from "@/types/proto/google/type/color_pb";
 import { useTranslate } from "@/utils/i18n";
 import SettingGroup from "./SettingGroup";
 import { SettingList, SettingPanel } from "./SettingList";
@@ -29,7 +31,7 @@ const DEFAULT_TAG_COLOR = "#ffffff";
 
 // Converts a CSS hex string to a google.type.Color message.
 const hexToColor = (hex: string) =>
-  create(ColorSchema, {
+  createMessage(ColorSchema, {
     red: parseInt(hex.slice(1, 3), 16) / 255,
     green: parseInt(hex.slice(3, 5), 16) / 255,
     blue: parseInt(hex.slice(5, 7), 16) / 255,
@@ -53,11 +55,14 @@ const TagsSection = () => {
   const { currentUser, userTagsSetting, refetchSettings } = useAuth();
   const { mutateAsync: updateUserSetting } = useUpdateUserSetting();
   const { data: tagCounts = {} } = useTagCounts(true);
-  const originalSetting = useMemo(() => userTagsSetting ?? create(UserSetting_TagsSettingSchema, {}), [userTagsSetting]);
+  const originalSetting = useMemo<UserSetting_TagsSetting>(
+    () => userTagsSetting ?? createMessage<UserSetting_TagsSetting>(UserSetting_TagsSettingSchema, {}),
+    [userTagsSetting],
+  );
 
   // Local state: map of tagName → { color, blur } for editing.
   const [localTags, setLocalTags] = useState<Record<string, LocalTagMeta>>(() =>
-    Object.fromEntries(Object.entries(originalSetting.tags).map(([name, meta]) => [name, toLocalTagMeta(meta)])),
+    Object.fromEntries(Object.entries(originalSetting.tags).map(([name, meta]) => [name, toLocalTagMeta(meta as UserSetting_TagMetadata)])),
   );
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState<string | undefined>(undefined);
@@ -66,7 +71,11 @@ const TagsSection = () => {
   // Sync local state when the fetched setting arrives (the fetch is async and
   // completes after mount, so localTags would be empty without this sync).
   useEffect(() => {
-    setLocalTags(Object.fromEntries(Object.entries(originalSetting.tags).map(([name, meta]) => [name, toLocalTagMeta(meta)])));
+    setLocalTags(
+      Object.fromEntries(
+        Object.entries(originalSetting.tags).map(([name, meta]) => [name, toLocalTagMeta(meta as UserSetting_TagMetadata)]),
+      ),
+    );
   }, [originalSetting.tags]);
 
   // All known tag names: union of saved entries and tags used in memos.
@@ -85,7 +94,10 @@ const TagsSection = () => {
   );
 
   const originalMetaMap = useMemo(
-    () => Object.fromEntries(Object.entries(originalSetting.tags).map(([name, meta]) => [name, toLocalTagMeta(meta)])),
+    () =>
+      Object.fromEntries(
+        Object.entries(originalSetting.tags).map(([name, meta]) => [name, toLocalTagMeta(meta as UserSetting_TagMetadata)]),
+      ),
     [originalSetting.tags],
   );
   const hasChanges = !isEqual(localTags, originalMetaMap);
@@ -131,7 +143,7 @@ const TagsSection = () => {
     const tags = Object.fromEntries(
       Object.entries(localTags).map(([name, meta]) => [
         name,
-        create(UserSetting_TagMetadataSchema, {
+        createMessage(UserSetting_TagMetadataSchema, {
           blurContent: meta.blur,
           ...(meta.color ? { backgroundColor: hexToColor(meta.color) } : {}),
         }),
@@ -143,11 +155,11 @@ const TagsSection = () => {
     }
 
     await updateUserSetting({
-      setting: create(UserSettingSchema, {
+      setting: createMessage(UserSettingSchema, {
         name: buildUserSettingName(currentUser.name, UserSetting_Key.TAGS),
         value: {
           case: "tagsSetting",
-          value: create(UserSetting_TagsSettingSchema, { tags }),
+          value: createMessage(UserSetting_TagsSettingSchema, { tags }),
         },
       }),
       updateMask: ["tags"],

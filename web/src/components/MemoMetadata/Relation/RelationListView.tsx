@@ -1,7 +1,7 @@
 import { LinkIcon, MilestoneIcon } from "lucide-react";
 import { useMemo, useState } from "react";
+import type { MemoRelation } from "@/api/types";
 import MetadataSection from "@/components/MemoMetadata/MetadataSection";
-import type { MemoRelation } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import RelationCard from "./RelationCard";
 import { getRelationBuckets, getRelationMemo, getRelationMemoName, type RelationDirection } from "./relationHelpers";

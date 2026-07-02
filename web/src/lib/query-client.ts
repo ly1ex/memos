@@ -1,13 +1,11 @@
-import { Code, ConnectError } from "@connectrpc/connect";
 import { QueryClient } from "@tanstack/react-query";
+import { ApiError, ApiErrorCode } from "@/api/errors";
 
-// Don't retry requests that failed due to authentication errors.
-// The auth interceptor in connect.ts already handles token refresh and request retry.
-// If the interceptor still throws Unauthenticated, the session is truly gone and the
-// user will be redirected to /auth. A React Query retry would only fire a second
-// failed refresh attempt and a second redirect call while navigation is already in progress.
+// Don't retry requests that failed due to authentication errors. Clerk owns session
+// refresh; when the REST client reports Unauthenticated, another React Query retry
+// would only repeat the same redirect-worthy request.
 const shouldRetry = (failureCount: number, error: unknown): boolean => {
-  if (error instanceof ConnectError && error.code === Code.Unauthenticated) return false;
+  if (error instanceof ApiError && error.code === ApiErrorCode.Unauthenticated) return false;
   return failureCount < 1;
 };
 

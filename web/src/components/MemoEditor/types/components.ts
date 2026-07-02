@@ -1,8 +1,10 @@
-import type { Location, Memo, Visibility } from "@/types/proto/api/v1/memo_service_pb";
+import type { ReactNode } from "react";
+import type { Location, Memo, Visibility } from "@/api/types";
 import type { AudioRecorderStatus } from "../hooks/useAudioRecorder";
 
 export interface MemoEditorProps {
   className?: string;
+  header?: ReactNode;
   cacheKey?: string;
   placeholder?: string;
   /** Existing memo to edit. When provided, the editor initializes from it without fetching. */
@@ -42,9 +44,6 @@ export interface AudioRecorderPanelProps {
   mediaStream: MediaStream | null;
   onStop: () => void;
   onCancel: () => void;
-  onTranscribe?: () => void;
-  canTranscribe?: boolean;
-  isTranscribing?: boolean;
 }
 
 export interface FocusModeOverlayProps {

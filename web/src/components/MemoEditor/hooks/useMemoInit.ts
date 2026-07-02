@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Memo, Visibility } from "@/types/proto/api/v1/memo_service_pb";
+import type { Memo, Visibility } from "@/api/types";
 import { cacheService, memoService } from "../services";
 import { useEditorContext } from "../state";
 import type { EditorController } from "../types/editorController";

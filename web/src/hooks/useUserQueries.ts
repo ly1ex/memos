@@ -1,10 +1,8 @@
-import { create } from "@bufbuild/protobuf";
-import { FieldMaskSchema } from "@bufbuild/protobuf/wkt";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { shortcutServiceClient, userServiceClient } from "@/connect";
-import { buildUserSettingName } from "@/helpers/resource-names";
-import useCurrentUser from "@/hooks/useCurrentUser";
+import { shortcutApi, userApi } from "@/api/client";
 import {
+  createMessage,
+  FieldMaskSchema,
   type ListAllUserStatsRequest,
   ListAllUserStatsRequestSchema,
   User,
@@ -13,7 +11,9 @@ import {
   UserSetting_Key,
   UserSettingSchema,
   UserStats,
-} from "@/types/proto/api/v1/user_service_pb";
+} from "@/api/types";
+import { buildUserSettingName } from "@/helpers/resource-names";
+import useCurrentUser from "@/hooks/useCurrentUser";
 
 const BATCH_GET_USERS_LIMIT = 100;
 type ListAllUserStatsQuery = Pick<ListAllUserStatsRequest, "state" | "filter">;
@@ -37,7 +37,7 @@ export function useUser(name: string, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: userKeys.detail(name),
     queryFn: async () => {
-      const user = await userServiceClient.getUser({ name });
+      const user = await userApi.getUser({ name });
       return user;
     },
     enabled: options?.enabled ?? true,
@@ -52,7 +52,7 @@ export function useUserStats(username?: string) {
       if (!username) {
         throw new Error("Username is required");
       }
-      const stats = await userServiceClient.getUserStats({ name: username });
+      const stats = await userApi.getUserStats({ name: username });
       return stats;
     },
     enabled: !!username,
@@ -63,7 +63,7 @@ export function useAllUserStats(request: Partial<ListAllUserStatsQuery> = {}, op
   return useQuery({
     queryKey: userKeys.allUserStats(request),
     queryFn: async () => {
-      const { stats } = await userServiceClient.listAllUserStats(create(ListAllUserStatsRequestSchema, request));
+      const { stats } = await userApi.listAllUserStats(createMessage(ListAllUserStatsRequestSchema, request));
       return stats;
     },
     enabled: options?.enabled ?? true,
@@ -74,7 +74,7 @@ export function useShortcuts() {
   return useQuery({
     queryKey: userKeys.shortcuts(),
     queryFn: async () => {
-      const { shortcuts } = await shortcutServiceClient.listShortcuts({});
+      const { shortcuts } = await shortcutApi.listShortcuts({});
       return shortcuts;
     },
   });
@@ -89,7 +89,7 @@ export function useNotifications() {
       if (!currentUser?.name) {
         return [];
       }
-      const { notifications } = await userServiceClient.listUserNotifications({ parent: currentUser.name });
+      const { notifications } = await userApi.listUserNotifications({ parent: currentUser.name });
       return notifications;
     },
     enabled: !!currentUser?.name,
@@ -110,17 +110,17 @@ export function useTagCounts(forCurrentUser = false) {
         if (!currentUser?.name) {
           return {};
         }
-        return userServiceClient.getUserStats({ name: currentUser.name });
+        return userApi.getUserStats({ name: currentUser.name });
       } else {
         // Fetch all user stats
-        const { stats } = await userServiceClient.listAllUserStats({});
+        const { stats } = await userApi.listAllUserStats({});
 
         // Aggregate tag counts from all users
         const tagCount: Record<string, number> = {};
         for (const userStats of stats) {
           if (userStats.tagCount) {
             for (const [tag, count] of Object.entries(userStats.tagCount)) {
-              tagCount[tag] = (tagCount[tag] || 0) + count;
+              tagCount[tag] = (tagCount[tag] || 0) + Number(count);
             }
           }
         }
@@ -143,9 +143,9 @@ export function useUpdateUser() {
 
   return useMutation({
     mutationFn: async ({ user, updateMask }: { user: Partial<User>; updateMask: string[] }) => {
-      const updatedUser = await userServiceClient.updateUser({
+      const updatedUser = await userApi.updateUser({
         user: user as User,
-        updateMask: create(FieldMaskSchema, { paths: updateMask }),
+        updateMask: createMessage(FieldMaskSchema, { paths: updateMask }),
       });
       return updatedUser;
     },
@@ -161,7 +161,7 @@ export function useDeleteUser() {
 
   return useMutation({
     mutationFn: async (name: string) => {
-      await userServiceClient.deleteUser({ name });
+      await userApi.deleteUser({ name });
       return name;
     },
     onSuccess: (name) => {
@@ -178,8 +178,8 @@ export function useUserSettings(parent?: string) {
     queryFn: async () => {
       if (!parent) return { settings: [], shortcuts: [] };
       const [{ settings }, { shortcuts }] = await Promise.all([
-        userServiceClient.listUserSettings({ parent }),
-        shortcutServiceClient.listShortcuts({ parent }),
+        userApi.listUserSettings({ parent }),
+        shortcutApi.listShortcuts({ parent }),
       ]);
       return { settings, shortcuts };
     },
@@ -193,9 +193,9 @@ export function useUpdateUserSetting() {
 
   return useMutation({
     mutationFn: async ({ setting, updateMask }: { setting: UserSetting; updateMask: string[] }) => {
-      const updatedSetting = await userServiceClient.updateUserSetting({
+      const updatedSetting = await userApi.updateUserSetting({
         setting,
-        updateMask: create(FieldMaskSchema, { paths: updateMask }),
+        updateMask: createMessage(FieldMaskSchema, { paths: updateMask }),
       });
       return updatedSetting;
     },
@@ -210,7 +210,7 @@ export function useListUsers() {
   return useQuery({
     queryKey: userKeys.all,
     queryFn: async () => {
-      const { users } = await userServiceClient.listUsers({});
+      const { users } = await userApi.listUsers({});
       return users;
     },
   });
@@ -227,7 +227,7 @@ export function useUpdateUserGeneralSetting(currentUserName?: string) {
       }
 
       const settingName = buildUserSettingName(currentUserName, UserSetting_Key.GENERAL);
-      const userSetting = create(UserSettingSchema, {
+      const userSetting = createMessage(UserSettingSchema, {
         name: settingName,
         value: {
           case: "generalSetting",
@@ -235,9 +235,9 @@ export function useUpdateUserGeneralSetting(currentUserName?: string) {
         },
       });
 
-      const updatedSetting = await userServiceClient.updateUserSetting({
+      const updatedSetting = await userApi.updateUserSetting({
         setting: userSetting,
-        updateMask: create(FieldMaskSchema, { paths: updateMask }),
+        updateMask: createMessage(FieldMaskSchema, { paths: updateMask }),
       });
       return updatedSetting;
     },
@@ -258,7 +258,7 @@ export function useUsersByNames(names: string[]) {
       const users = await Promise.all(
         uniqueNames.map(async (name) => {
           try {
-            const user = await userServiceClient.getUser({ name });
+            const user = await userApi.getUser({ name });
             return { name, user };
           } catch {
             return { name, user: undefined };
@@ -290,7 +290,7 @@ export function useUsersByUsernames(usernames: string[], options?: { enabled?: b
         batches.push(uniqueUsernames.slice(i, i + BATCH_GET_USERS_LIMIT));
       }
 
-      const responses = await Promise.all(batches.map((batch) => userServiceClient.batchGetUsers({ usernames: batch })));
+      const responses = await Promise.all(batches.map((batch) => userApi.batchGetUsers({ usernames: batch })));
       const usersByUsername = new Map(responses.flatMap((response) => response.users).map((user) => [user.username, user] as const));
 
       const userMap = new Map<string, User | undefined>();

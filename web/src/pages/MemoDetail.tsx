@@ -1,7 +1,8 @@
-import { Code, ConnectError } from "@connectrpc/connect";
 import { ArrowUpLeftFromCircleIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useParams } from "react-router-dom";
+import { ApiError, ApiErrorCode } from "@/api/errors";
+import type { Attachment } from "@/api/types";
 import MemoCommentSection from "@/components/MemoCommentSection";
 import { MentionResolutionProvider } from "@/components/MemoContent/MentionResolutionContext";
 import { MemoDetailSidebar, MemoDetailSidebarDrawer } from "@/components/MemoDetailSidebar";
@@ -13,7 +14,6 @@ import useMemoDetailError from "@/hooks/useMemoDetailError";
 import { useInfiniteMemoComments, useMemo } from "@/hooks/useMemoQueries";
 import { useSharedMemo, withShareAttachmentLinks } from "@/hooks/useMemoShareQueries";
 import { cn } from "@/lib/utils";
-import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
 
 const MemoDetail = () => {
   const md = useMediaQuery("md");
@@ -70,7 +70,7 @@ const MemoDetail = () => {
   }, [hash, memo, comments]);
 
   if (isShareMode) {
-    const isNotFound = error instanceof ConnectError && (error.code === Code.NotFound || error.code === Code.Unauthenticated);
+    const isNotFound = error instanceof ApiError && (error.code === ApiErrorCode.NotFound || error.code === ApiErrorCode.Unauthenticated);
     if (isNotFound || (!isLoading && !memo)) {
       return <Navigate to="/404" replace />;
     }

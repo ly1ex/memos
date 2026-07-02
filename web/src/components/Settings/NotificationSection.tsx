@@ -1,17 +1,9 @@
-import { create } from "@bufbuild/protobuf";
 import { isEqual } from "lodash-es";
-import type { ChangeEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { instanceServiceClient } from "@/connect";
-import { useInstance } from "@/contexts/InstanceContext";
-import useCurrentUser from "@/hooks/useCurrentUser";
-import { handleError } from "@/lib/error";
+import { instanceApi } from "@/api/client";
 import {
+  createMessage,
   InstanceSetting_Key,
   InstanceSetting_NotificationSetting,
   InstanceSetting_NotificationSetting_EmailSetting,
@@ -19,36 +11,28 @@ import {
   InstanceSetting_NotificationSettingSchema,
   InstanceSettingSchema,
   TestInstanceEmailSettingRequestSchema,
-} from "@/types/proto/api/v1/instance_service_pb";
+} from "@/api/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { useInstance } from "@/contexts/InstanceContext";
+import useCurrentUser from "@/hooks/useCurrentUser";
+import { handleError } from "@/lib/error";
 import { useTranslate } from "@/utils/i18n";
 import SettingGroup from "./SettingGroup";
 import SettingRow from "./SettingRow";
 import SettingSection from "./SettingSection";
 import useInstanceSettingUpdater, { buildInstanceSettingName } from "./useInstanceSettingUpdater";
 
-const defaultEmailSetting = () =>
-  create(InstanceSetting_NotificationSetting_EmailSettingSchema, {
-    smtpPort: 587,
-    useTls: true,
-  });
+const defaultEmailSetting = () => createMessage(InstanceSetting_NotificationSetting_EmailSettingSchema, {});
 
 const isEmailSettingConfigured = (email?: InstanceSetting_NotificationSetting_EmailSetting) => {
-  return Boolean(
-    email &&
-      (email.enabled ||
-        email.smtpHost.trim() ||
-        email.smtpPort > 0 ||
-        email.smtpUsername.trim() ||
-        email.fromEmail.trim() ||
-        email.fromName.trim() ||
-        email.replyTo.trim() ||
-        email.useTls ||
-        email.useSsl),
-  );
+  return Boolean(email && (email.enabled || email.fromEmail.trim() || email.fromName.trim() || email.replyTo.trim()));
 };
 
 const normalizeNotificationSetting = (setting: InstanceSetting_NotificationSetting) =>
-  create(InstanceSetting_NotificationSettingSchema, {
+  createMessage(InstanceSetting_NotificationSettingSchema, {
     ...setting,
     email: isEmailSettingConfigured(setting.email) ? setting.email : defaultEmailSetting(),
   });
@@ -81,37 +65,23 @@ const NotificationSection = () => {
   }, [normalizedOriginalSetting]);
 
   const emailSetting = notificationSetting.email ?? defaultEmailSetting();
-  const hasExistingEmailSetting = isEmailSettingConfigured(originalSetting.email);
   const requirementLabel = (requirement: Requirement) => t(`setting.notification.requirement-${requirement}`);
   const fieldLabel = (label: string, requirement: Requirement) => (
     <FieldLabel label={label} requirement={requirement} requirementLabel={requirementLabel(requirement)} />
   );
 
   const updateEmailSetting = (partial: Partial<InstanceSetting_NotificationSetting_EmailSetting>) => {
-    const nextEmail = create(InstanceSetting_NotificationSetting_EmailSettingSchema, {
+    const nextEmail = createMessage(InstanceSetting_NotificationSetting_EmailSettingSchema, {
       ...emailSetting,
       ...partial,
     });
 
     setNotificationSetting(
-      create(InstanceSetting_NotificationSettingSchema, {
+      createMessage(InstanceSetting_NotificationSettingSchema, {
         ...notificationSetting,
         email: nextEmail,
       }),
     );
-  };
-
-  const handlePortChanged = (event: ChangeEvent<HTMLInputElement>) => {
-    const port = parseInt(event.target.value);
-    updateEmailSetting({ smtpPort: Number.isNaN(port) ? 0 : port });
-  };
-
-  const handleUseTLSChanged = (checked: boolean) => {
-    updateEmailSetting({ useTls: checked, useSsl: checked ? false : emailSetting.useSsl });
-  };
-
-  const handleUseSSLChanged = (checked: boolean) => {
-    updateEmailSetting({ useSsl: checked, useTls: checked ? false : emailSetting.useTls });
   };
 
   const allowSave = useMemo(() => {
@@ -122,23 +92,17 @@ const NotificationSection = () => {
     if (!email?.enabled) {
       return true;
     }
-    return Boolean(email.smtpHost.trim() && email.smtpPort > 0 && email.smtpPort <= 65535 && email.fromEmail.trim());
+    return Boolean(email.fromEmail.trim());
   }, [notificationSetting, normalizedOriginalSetting]);
 
   const canTestEmail = useMemo(() => {
-    return Boolean(
-      currentUser?.email &&
-        emailSetting.smtpHost.trim() &&
-        emailSetting.smtpPort > 0 &&
-        emailSetting.smtpPort <= 65535 &&
-        emailSetting.fromEmail.trim(),
-    );
-  }, [currentUser?.email, emailSetting.fromEmail, emailSetting.smtpHost, emailSetting.smtpPort]);
+    return Boolean(currentUser?.email && emailSetting.fromEmail.trim());
+  }, [currentUser?.email, emailSetting.fromEmail]);
 
   const saveNotificationSetting = async () => {
     await saveInstanceSetting({
       key: InstanceSetting_Key.NOTIFICATION,
-      setting: create(InstanceSettingSchema, {
+      setting: createMessage(InstanceSettingSchema, {
         name: buildInstanceSettingName(InstanceSetting_Key.NOTIFICATION),
         value: {
           case: "notificationSetting",
@@ -157,8 +121,8 @@ const NotificationSection = () => {
 
     setIsTestingEmail(true);
     try {
-      await instanceServiceClient.testInstanceEmailSetting(
-        create(TestInstanceEmailSettingRequestSchema, {
+      await instanceApi.testInstanceEmailSetting(
+        createMessage(TestInstanceEmailSettingRequestSchema, {
           email: emailSetting,
           recipientEmail: currentUser.email,
         }),
@@ -176,67 +140,6 @@ const NotificationSection = () => {
       <SettingGroup title={t("setting.notification.email-title")} description={t("setting.notification.email-description")}>
         <SettingRow label={t("setting.notification.email-enabled")} description={t("setting.notification.email-enabled-description")}>
           <Switch checked={emailSetting.enabled} onCheckedChange={(enabled) => updateEmailSetting({ enabled })} />
-        </SettingRow>
-
-        <SettingRow
-          label={fieldLabel(t("setting.notification.smtp-host"), "required")}
-          description={t("setting.notification.smtp-host-description")}
-        >
-          <Input
-            className="w-full sm:w-80"
-            value={emailSetting.smtpHost}
-            placeholder="smtp.gmail.com"
-            aria-required={emailSetting.enabled}
-            onChange={(e) => updateEmailSetting({ smtpHost: e.target.value })}
-          />
-        </SettingRow>
-
-        <SettingRow
-          label={fieldLabel(t("setting.notification.smtp-port"), "required")}
-          description={t("setting.notification.smtp-port-description")}
-        >
-          <Input
-            className="w-28 font-mono"
-            type="number"
-            min={1}
-            max={65535}
-            value={emailSetting.smtpPort}
-            placeholder="587"
-            aria-required={emailSetting.enabled}
-            onChange={handlePortChanged}
-          />
-        </SettingRow>
-
-        <SettingRow
-          label={fieldLabel(t("setting.notification.smtp-username"), "gmail")}
-          description={t("setting.notification.smtp-username-description")}
-        >
-          <Input
-            className="w-full sm:w-80"
-            type="email"
-            value={emailSetting.smtpUsername}
-            placeholder="your.name@gmail.com"
-            autoComplete="username"
-            onChange={(e) => updateEmailSetting({ smtpUsername: e.target.value })}
-          />
-        </SettingRow>
-
-        <SettingRow
-          label={fieldLabel(t("setting.notification.smtp-password"), "gmail")}
-          description={
-            hasExistingEmailSetting
-              ? t("setting.notification.smtp-password-preserve-description")
-              : t("setting.notification.smtp-password-description")
-          }
-        >
-          <Input
-            className="w-full sm:w-80"
-            type="password"
-            value={emailSetting.smtpPassword}
-            placeholder={hasExistingEmailSetting ? t("setting.notification.smtp-password-placeholder-existing") : "abcd efgh ijkl mnop"}
-            autoComplete="new-password"
-            onChange={(e) => updateEmailSetting({ smtpPassword: e.target.value })}
-          />
         </SettingRow>
 
         <SettingRow
@@ -276,20 +179,6 @@ const NotificationSection = () => {
             placeholder="support@example.com"
             onChange={(e) => updateEmailSetting({ replyTo: e.target.value })}
           />
-        </SettingRow>
-
-        <SettingRow
-          label={fieldLabel(t("setting.notification.use-tls"), "recommended")}
-          description={t("setting.notification.use-tls-description")}
-        >
-          <Switch checked={emailSetting.useTls} onCheckedChange={handleUseTLSChanged} />
-        </SettingRow>
-
-        <SettingRow
-          label={fieldLabel(t("setting.notification.use-ssl"), "optional")}
-          description={t("setting.notification.use-ssl-description")}
-        >
-          <Switch checked={emailSetting.useSsl} onCheckedChange={handleUseSSLChanged} />
         </SettingRow>
       </SettingGroup>
 

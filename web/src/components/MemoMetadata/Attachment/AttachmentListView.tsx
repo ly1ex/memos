@@ -1,11 +1,11 @@
 import { DownloadIcon, FileIcon, PaperclipIcon, PlayIcon } from "lucide-react";
 import type { PropsWithChildren } from "react";
 import { useMemo } from "react";
+import type { Attachment } from "@/api/types";
 import MetadataSection from "@/components/MemoMetadata/MetadataSection";
 import MotionPhotoPreview from "@/components/MotionPhotoPreview";
 import VideoPoster from "@/components/VideoPoster";
 import { cn } from "@/lib/utils";
-import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
 import { getAttachmentUrl } from "@/utils/attachment";
 import type { AttachmentVisualItem, PreviewMediaItem } from "@/utils/media-item";
 import { buildAttachmentVisualItems } from "@/utils/media-item";

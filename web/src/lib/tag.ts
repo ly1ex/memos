@@ -1,4 +1,4 @@
-import type { UserSetting_TagMetadata, UserSetting_TagsSetting } from "@/types/proto/api/v1/user_service_pb";
+import type { UserSetting_TagMetadata, UserSetting_TagsSetting } from "@/api/types";
 
 // Cache compiled regexes to avoid re-compiling on every tag render.
 const compiledPatternCache = new Map<string, RegExp | null>();

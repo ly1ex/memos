@@ -1,4 +1,4 @@
-import { Visibility } from "@/types/proto/api/v1/memo_service_pb";
+import { Visibility } from "@/api/types";
 
 export const convertVisibilityFromString = (visibility: string) => {
   switch (visibility) {

@@ -1,12 +1,10 @@
-import { create } from "@bufbuild/protobuf";
-import { FieldMaskSchema } from "@bufbuild/protobuf/wkt";
 import type { InfiniteData } from "@tanstack/react-query";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { memoServiceClient } from "@/connect";
+import { memoApi } from "@/api/client";
+import type { ListMemosRequest, ListMemosResponse, Memo } from "@/api/types";
+import { createMessage, FieldMaskSchema, ListMemoCommentsRequestSchema, ListMemosRequestSchema, MemoSchema } from "@/api/types";
 import { DEFAULT_LIST_MEMOS_PAGE_SIZE } from "@/helpers/consts";
 import { userKeys } from "@/hooks/useUserQueries";
-import type { ListMemosRequest, ListMemosResponse, Memo } from "@/types/proto/api/v1/memo_service_pb";
-import { ListMemoCommentsRequestSchema, ListMemosRequestSchema, MemoSchema } from "@/types/proto/api/v1/memo_service_pb";
 
 // Query keys factory for consistent cache management
 export const memoKeys = {
@@ -113,7 +111,7 @@ export function useMemos(request: Partial<ListMemosRequest> = {}) {
   return useQuery({
     queryKey: memoKeys.list(request),
     queryFn: async () => {
-      const response = await memoServiceClient.listMemos(create(ListMemosRequestSchema, request as Record<string, unknown>));
+      const response = await memoApi.listMemos(createMessage(ListMemosRequestSchema, request as Record<string, unknown>));
       return response;
     },
   });
@@ -123,8 +121,8 @@ export function useInfiniteMemos(request: Partial<ListMemosRequest> = {}, option
   return useInfiniteQuery({
     queryKey: memoKeys.list(request),
     queryFn: async ({ pageParam }) => {
-      const response = await memoServiceClient.listMemos(
-        create(ListMemosRequestSchema, {
+      const response = await memoApi.listMemos(
+        createMessage(ListMemosRequestSchema, {
           ...request,
           pageToken: pageParam || "",
         } as Record<string, unknown>),
@@ -143,7 +141,7 @@ export function useMemo(name: string, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: memoKeys.detail(name),
     queryFn: async () => {
-      const memo = await memoServiceClient.getMemo({ name });
+      const memo = await memoApi.getMemo({ name });
       return memo;
     },
     enabled: options?.enabled ?? true,
@@ -166,7 +164,7 @@ export function useLinkMetadata(url: string, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: memoKeys.linkMetadata(trimmedUrl),
     queryFn: async () => {
-      const metadata = await memoServiceClient.getLinkMetadata({ url: trimmedUrl });
+      const metadata = await memoApi.getLinkMetadata({ url: trimmedUrl });
       return metadata;
     },
     enabled: (options?.enabled ?? true) && isHTTPURL(trimmedUrl),
@@ -180,7 +178,7 @@ export function useCreateMemo() {
 
   return useMutation({
     mutationFn: async (memoToCreate: Memo) => {
-      const memo = await memoServiceClient.createMemo({ memo: memoToCreate });
+      const memo = await memoApi.createMemo({ memo: memoToCreate });
       return memo;
     },
     onSuccess: (newMemo) => {
@@ -199,9 +197,9 @@ export function useUpdateMemo() {
 
   return useMutation({
     mutationFn: async ({ update, updateMask }: { update: Partial<Memo>; updateMask: string[] }) => {
-      const memo = await memoServiceClient.updateMemo({
-        memo: create(MemoSchema, update as Record<string, unknown>),
-        updateMask: create(FieldMaskSchema, { paths: updateMask }),
+      const memo = await memoApi.updateMemo({
+        memo: createMessage(MemoSchema, update as Record<string, unknown>),
+        updateMask: createMessage(FieldMaskSchema, { paths: updateMask }),
       });
       return memo;
     },
@@ -255,7 +253,7 @@ export function useDeleteMemo() {
 
   return useMutation({
     mutationFn: async (name: string) => {
-      await memoServiceClient.deleteMemo({ name });
+      await memoApi.deleteMemo({ name });
       return name;
     },
     onSuccess: (name) => {
@@ -273,8 +271,8 @@ export function useMemoComments(name: string, options?: { enabled?: boolean; pag
   return useQuery({
     queryKey: [...memoKeys.comments(name), options?.pageSize ?? 0],
     queryFn: async () => {
-      const response = await memoServiceClient.listMemoComments(
-        create(ListMemoCommentsRequestSchema, {
+      const response = await memoApi.listMemoComments(
+        createMessage(ListMemoCommentsRequestSchema, {
           name,
           pageSize: options?.pageSize ?? 0,
         }),
@@ -293,8 +291,8 @@ export function useInfiniteMemoComments(name: string, options?: { enabled?: bool
   return useInfiniteQuery({
     queryKey: [...memoKeys.comments(name), "infinite", pageSize],
     queryFn: async ({ pageParam }) => {
-      const response = await memoServiceClient.listMemoComments(
-        create(ListMemoCommentsRequestSchema, {
+      const response = await memoApi.listMemoComments(
+        createMessage(ListMemoCommentsRequestSchema, {
           name,
           pageSize,
           pageToken: pageParam || "",
