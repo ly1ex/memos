@@ -10,6 +10,7 @@ import {
   type LinkMetadata,
   LinkMetadataSchema,
   type Memo,
+  type MemoEntryType,
   type MemoRelation,
   MemoRelation_MemoSchema,
   MemoRelation_Type,
@@ -17,6 +18,7 @@ import {
   MemoSchema,
   type MemoShare,
   MemoShareSchema,
+  type MemoSpace,
   MotionMediaSchema,
   type Reaction,
   ReactionSchema,
@@ -213,6 +215,15 @@ function visibilityName(value: unknown): "PRIVATE" | "PROTECTED" | "PUBLIC" | un
   return undefined;
 }
 
+function memoEntryTypeFrom(value: unknown): MemoEntryType {
+  if (value === "DIARY" || value === "COMMUNITY") return value;
+  return "MEMO";
+}
+
+function memoSpaceName(value: unknown): MemoSpace | undefined {
+  return value === "private" || value === "community" ? value : undefined;
+}
+
 function userRoleFrom(value: unknown): User_Role {
   if (typeof value === "number") return value as User_Role;
   if (value === "ADMIN") return User_Role.ADMIN;
@@ -347,6 +358,7 @@ function normalizeMemo(raw: unknown): Memo {
     updateTime: timestampFrom(record.updateTime ?? record.updatedTs),
     content: asString(record.content),
     visibility: visibilityFrom(record.visibility),
+    entryType: memoEntryTypeFrom(record.entryType),
     tags: Array.isArray(record.tags) ? record.tags.filter((tag): tag is string => typeof tag === "string") : [],
     pinned: Boolean(record.pinned),
     attachments: Array.isArray(record.attachments) ? record.attachments.map(normalizeAttachment) : [],
@@ -457,8 +469,8 @@ function unwrapOneof(value: unknown): unknown {
   return value;
 }
 
-function serializeMemoInput(memo: Partial<Memo> | undefined): JsonObject {
-  return {
+function serializeMemoInput(memo: Partial<Memo> | undefined, options: { includeEntryType?: boolean } = {}): JsonObject {
+  const input: JsonObject = {
     name: memo?.name,
     content: memo?.content ?? "",
     visibility: visibilityName(memo?.visibility),
@@ -466,6 +478,12 @@ function serializeMemoInput(memo: Partial<Memo> | undefined): JsonObject {
     createTime: timestampToIso(memo?.createTime),
     updateTime: timestampToIso(memo?.updateTime),
   };
+
+  if (options.includeEntryType) {
+    input.entryType = memoEntryTypeFrom(memo?.entryType);
+  }
+
+  return input;
 }
 
 function serializeUserInput(user: Partial<User> | undefined): JsonObject {
@@ -531,6 +549,22 @@ async function enrichMemo(memo: Memo): Promise<Memo> {
 
 async function enrichMemos(memos: Memo[]): Promise<Memo[]> {
   return Promise.all(memos.map(enrichMemo));
+}
+
+function applyMemoSpaceFilter(memos: Memo[], space?: MemoSpace, entryType?: MemoEntryType): Memo[] {
+  return memos.filter((memo) => {
+    const memoEntryType = memoEntryTypeFrom(memo.entryType);
+    if (entryType && memoEntryType !== entryType) {
+      return false;
+    }
+    if (space === "community") {
+      return memoEntryType === "COMMUNITY";
+    }
+    if (space === "private") {
+      return memoEntryType === "MEMO" || memoEntryType === "DIARY";
+    }
+    return true;
+  });
 }
 
 function applyMemoFilter(memos: Memo[], filter?: string): Memo[] {
@@ -804,7 +838,9 @@ export const userApi = {
 };
 
 export const memoApi = {
-  async listMemos(request: { pageSize?: number; pageToken?: string; state?: State; filter?: string } = {}) {
+  async listMemos(
+    request: { pageSize?: number; pageToken?: string; state?: State; filter?: string; space?: MemoSpace; entryType?: MemoEntryType } = {},
+  ) {
     if (request.state === State.ARCHIVED) {
       return { memos: [], nextPageToken: "" };
     }
@@ -812,9 +848,13 @@ export const memoApi = {
       query: {
         pageSize: request.pageSize,
         cursor: request.pageToken,
+        space: memoSpaceName(request.space),
+        entryType: request.entryType,
       },
     });
-    const memos = await enrichMemos(applyMemoFilter((data.memos ?? []).map(normalizeMemo), request.filter));
+    const memos = await enrichMemos(
+      applyMemoFilter(applyMemoSpaceFilter((data.memos ?? []).map(normalizeMemo), request.space, request.entryType), request.filter),
+    );
     return {
       memos,
       nextPageToken: data.nextPageToken || data.nextCursor || "",
@@ -830,7 +870,7 @@ export const memoApi = {
     const data = await apiRequest<{ memo: unknown }>("/api/v1/memos", {
       method: "POST",
       body: {
-        memo: serializeMemoInput(request.memo),
+        memo: serializeMemoInput(request.memo, { includeEntryType: true }),
         memoId: request.memoId,
       },
     });
@@ -852,7 +892,7 @@ export const memoApi = {
     const paths = new Set(request.updateMask?.paths ?? []);
     await apiRequest<{ memo: unknown }>(`/api/v1/memos/${resourcePath(request.memo.name, "memos")}`, {
       method: "PATCH",
-      body: { memo: serializeMemoInput(request.memo) },
+      body: { memo: serializeMemoInput(request.memo, { includeEntryType: paths.has("entryType") || paths.has("entry_type") }) },
     });
     if (paths.has("attachments") && request.memo.attachments) {
       await memoApi.setMemoAttachments({ name: request.memo.name, attachments: request.memo.attachments });
@@ -888,7 +928,7 @@ export const memoApi = {
   async createMemoComment(request: { name: string; comment?: Partial<Memo> }): Promise<Memo> {
     const data = await apiRequest<{ memo?: unknown; comment?: unknown }>(`/api/v1/memos/${resourcePath(request.name, "memos")}/comments`, {
       method: "POST",
-      body: { comment: serializeMemoInput(request.comment) },
+      body: { comment: serializeMemoInput(request.comment, { includeEntryType: true }) },
     });
     return enrichMemo(normalizeMemo(data.memo ?? data.comment));
   },

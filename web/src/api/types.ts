@@ -42,6 +42,7 @@ function defaultValueForShape(shape: unknown): Record<string, unknown> {
         creator: "",
         content: "",
         visibility: Visibility.VISIBILITY_UNSPECIFIED,
+        entryType: "MEMO",
         tags: [],
         pinned: false,
         attachments: [],
@@ -145,6 +146,10 @@ export enum MemoRelation_Type {
   COMMENT = 2,
 }
 
+export type MemoEntryType = "MEMO" | "DIARY" | "COMMUNITY";
+
+export type MemoSpace = "private" | "community";
+
 export enum MotionMediaFamily {
   MOTION_MEDIA_FAMILY_UNSPECIFIED = 0,
   APPLE_LIVE_PHOTO = 1,
@@ -243,6 +248,7 @@ export type Memo = {
   updateTime?: Timestamp;
   content: string;
   visibility: Visibility;
+  entryType?: MemoEntryType;
   tags: string[];
   pinned: boolean;
   attachments: Attachment[];
@@ -430,6 +436,8 @@ export type ListMemosRequest = {
   filter?: string;
   orderBy?: string;
   showDeleted?: boolean;
+  space?: MemoSpace;
+  entryType?: MemoEntryType;
 };
 
 export type ListMemosResponse = {

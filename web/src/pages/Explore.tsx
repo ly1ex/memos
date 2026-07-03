@@ -1,7 +1,9 @@
+import { Navigate } from "react-router-dom";
 import { Memo, State, Visibility } from "@/api/types";
 import DiaryModeSwitch from "@/components/DiaryModeSwitch";
 import MemoView from "@/components/MemoView";
 import PagedMemoList from "@/components/PagedMemoList";
+import { useSpace } from "@/contexts/SpaceContext";
 import { useView } from "@/contexts/ViewContext";
 import { useMemoFilters, useMemoSorting } from "@/hooks";
 import useCurrentUser from "@/hooks/useCurrentUser";
@@ -11,6 +13,11 @@ const Explore = () => {
   const t = useTranslate();
   const currentUser = useCurrentUser();
   const { compactMode } = useView();
+  const { space } = useSpace();
+
+  if (currentUser && space === "private") {
+    return <Navigate to="/" replace />;
+  }
 
   // Determine visibility filter based on authentication status
   // - Logged-in users: Can see PUBLIC and PROTECTED memos
@@ -47,6 +54,7 @@ const Explore = () => {
             memo={memo}
             showCreator
             showVisibility
+            showEngagement
             compact={compactMode}
           />
         )}
@@ -56,6 +64,8 @@ const Explore = () => {
         listSort={listSort}
         orderBy={orderBy}
         filter={memoFilter}
+        space="community"
+        entryType="COMMUNITY"
         showCreator
       />
     </section>

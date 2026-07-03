@@ -38,6 +38,7 @@ const baseMemo = {
   creatorId: owner.id,
   content: "hello",
   visibility: "PRIVATE",
+  entryType: "MEMO",
   rowStatus: "NORMAL",
   pinned: false,
   payload: {},
@@ -74,4 +75,3 @@ function authFor(localUser: LocalUser): AuthContext {
     localUser
   };
 }
-

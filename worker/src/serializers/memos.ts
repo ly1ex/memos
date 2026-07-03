@@ -17,6 +17,7 @@ export interface MemoResponse extends Memo {
     hasIncompleteTasks: boolean;
     title: string;
   };
+  entryType: Memo["entryType"];
   snippet: string;
   reactions?: Reaction[];
 }

@@ -12,10 +12,13 @@ interface Props {
   onOpenChange?: (open: boolean) => void;
 }
 
+const DEFAULT_REACTIONS = ["👍", "❤️", "✨", "👏", "💡", "👀", "🔥", "🙏"];
+
 const ReactionSelector = (props: Props) => {
   const { memo, className, onOpenChange } = props;
   const [open, setOpen] = useState(false);
   const { memoRelatedSetting } = useInstance();
+  const reactionTypes = memoRelatedSetting.reactions.length > 0 ? memoRelatedSetting.reactions : DEFAULT_REACTIONS;
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
@@ -41,7 +44,7 @@ const ReactionSelector = (props: Props) => {
       </PopoverTrigger>
       <PopoverContent align="center" className="max-w-[90vw] sm:max-w-md">
         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-1 max-h-64 overflow-y-auto">
-          {memoRelatedSetting.reactions.map((reactionType) => (
+          {reactionTypes.map((reactionType) => (
             <button
               type="button"
               key={reactionType}

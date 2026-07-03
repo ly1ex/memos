@@ -71,7 +71,7 @@ const MemoCommentSection = ({ memo, comments, parentPage, hasMoreComments, isFet
         )}
         {comments.map((comment) => (
           <div className="w-full" key={`${comment.name}-${comment.updateTime}`} id={extractMemoIdFromName(comment.name)}>
-            <MemoView memo={comment} parentPage={parentPage} showCreator compact />
+            <MemoView memo={comment} parentPage={parentPage} showCreator compact disableDetailNavigation />
           </div>
         ))}
         {hasMoreComments && (

@@ -1,3 +1,4 @@
+import { parseMemoEntryType } from "../domain/memo-payload";
 import { HttpError } from "../http/errors";
 import { nowTs } from "../utils/time";
 import { createUid } from "../utils/uid";
@@ -166,6 +167,7 @@ export async function getSharedMemo(db: D1Database, shareId: string): Promise<{ 
       creatorUsername: row.memoCreatorUsername ?? undefined,
       content: row.content,
       visibility: row.visibility,
+      entryType: parseEntryType(row.payloadJson),
       rowStatus: row.rowStatus,
       pinned: row.pinned === 1,
       payload: parsePayload(row.payloadJson),
@@ -173,6 +175,14 @@ export async function getSharedMemo(db: D1Database, shareId: string): Promise<{ 
       updatedTs: row.memoUpdatedTs
     }
   };
+}
+
+function parseEntryType(value: string): Memo["entryType"] {
+  const payload = parsePayload(value);
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return "MEMO";
+  }
+  return parseMemoEntryType((payload as Record<string, unknown>).entryType);
 }
 
 function toMemoShare(row: MemoShareRow): MemoShare {

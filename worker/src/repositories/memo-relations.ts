@@ -1,6 +1,7 @@
+import { parseMemoEntryType } from "../domain/memo-payload";
+import { nowTs } from "../utils/time";
 import { decodeCreatedCursor, pageFromLimit, type CursorPage } from "./cursor";
 import type { Memo } from "./memos";
-import { nowTs } from "../utils/time";
 
 export type MemoRelationType = "COMMENT";
 
@@ -148,12 +149,21 @@ function toMemo(row: MemoWithRelationRow): Memo {
     creatorUsername: row.creatorUsername ?? undefined,
     content: row.content,
     visibility: row.visibility,
+    entryType: parseEntryType(row.payloadJson),
     rowStatus: row.rowStatus,
     pinned: row.pinned === 1,
     payload: parsePayload(row.payloadJson),
     createdTs: row.createdTs,
     updatedTs: row.updatedTs
   };
+}
+
+function parseEntryType(value: string): Memo["entryType"] {
+  const payload = parsePayload(value);
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return "MEMO";
+  }
+  return parseMemoEntryType((payload as Record<string, unknown>).entryType);
 }
 
 function parsePayload(value: string): unknown {

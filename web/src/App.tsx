@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { useInstance } from "./contexts/InstanceContext";
 import { MemoFilterProvider } from "./contexts/MemoFilterContext";
+import { SpaceProvider } from "./contexts/SpaceContext";
 import useNavigateTo from "./hooks/useNavigateTo";
 import { useUserLocale } from "./hooks/useUserLocale";
 import { useUserTheme } from "./hooks/useUserTheme";
@@ -60,7 +61,9 @@ const App = () => {
 
   return (
     <MemoFilterProvider>
-      <Outlet />
+      <SpaceProvider>
+        <Outlet />
+      </SpaceProvider>
     </MemoFilterProvider>
   );
 };

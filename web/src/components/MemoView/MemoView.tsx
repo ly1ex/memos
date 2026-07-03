@@ -1,8 +1,10 @@
+import { HeartIcon, MessageCircleIcon } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { State } from "@/api/types";
+import { State, Visibility } from "@/api/types";
 import { useAuth } from "@/contexts/AuthContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
+import useNavigateTo from "@/hooks/useNavigateTo";
 import { useUser } from "@/hooks/useUserQueries";
 import { findTagMetadata } from "@/lib/tag";
 import { cn } from "@/lib/utils";
@@ -25,6 +27,7 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
   const currentUser = useCurrentUser();
   const { userTagsSetting } = useAuth();
   const creator = useUser(memoData.creator).data;
+  const navigateTo = useNavigateTo();
   const isArchived = memoData.state === State.ARCHIVED;
   const readonly = memoData.creator !== currentUser?.name && !isSuperUser(currentUser);
   const parentPage = parentPageProp || "/";
@@ -41,7 +44,64 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
 
   const location = useLocation();
   const isInMemoDetailPage = location.pathname.startsWith(`/${memoData.name}`) || location.pathname.startsWith("/memos/shares/");
-  const showCommentPreview = !isInMemoDetailPage && computeCommentAmount(memoData) > 0;
+  const canOpenDetail = !props.disableDetailNavigation && !isInMemoDetailPage;
+  const commentAmount = computeCommentAmount(memoData);
+  const showCommentPreview = !isInMemoDetailPage && commentAmount > 0;
+
+  const openMemoDetail = useCallback(() => {
+    navigateTo(`/${memoData.name}`, { state: { from: parentPage } });
+  }, [memoData.name, navigateTo, parentPage]);
+
+  const shouldIgnoreDetailNavigation = useCallback((target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) {
+      return true;
+    }
+    if (window.getSelection()?.toString()) {
+      return true;
+    }
+    return Boolean(
+      target.closest(
+        [
+          "a",
+          "button",
+          "input",
+          "textarea",
+          "select",
+          "summary",
+          "img",
+          "video",
+          "audio",
+          "[contenteditable='true']",
+          "[role='button']",
+          "[role='menuitem']",
+          "[data-no-detail-navigation]",
+        ].join(","),
+      ),
+    );
+  }, []);
+
+  const handleArticleClick = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      if (!canOpenDetail || shouldIgnoreDetailNavigation(event.target)) {
+        return;
+      }
+      openMemoDetail();
+    },
+    [canOpenDetail, openMemoDetail, shouldIgnoreDetailNavigation],
+  );
+
+  const handleArticleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLElement>) => {
+      if (!canOpenDetail || shouldIgnoreDetailNavigation(event.target)) {
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        openMemoDetail();
+      }
+    },
+    [canOpenDetail, openMemoDetail, shouldIgnoreDetailNavigation],
+  );
 
   useEffect(() => {
     const card = cardRef.current;
@@ -102,12 +162,17 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
   );
 
   if (showEditor) {
+    const canChangeMemoVisibility = !memoData.parent && (memoData.entryType ?? "MEMO") === "MEMO";
     return (
       <MemoEditor
         autoFocus
         className="mb-2"
         cacheKey={`inline-memo-editor-${memoData.name}`}
         memo={memoData}
+        entryType={memoData.entryType ?? "MEMO"}
+        defaultVisibility={memoData.visibility}
+        visibilityOptions={[Visibility.PRIVATE, Visibility.PUBLIC]}
+        showVisibilitySelector={canChangeMemoVisibility}
         parentMemoName={memoData.parent || undefined}
         onConfirm={closeEditor}
         onCancel={closeEditor}
@@ -115,15 +180,41 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
     );
   }
 
+  const engagementBar = props.showEngagement && !isInMemoDetailPage && (
+    <div className="memo-engagement-bar" data-no-detail-navigation>
+      <button type="button" className="memo-engagement-button" onClick={openMemoDetail}>
+        <HeartIcon className="size-4" />
+        <span>{memoData.reactions.length}</span>
+      </button>
+      <button
+        type="button"
+        className="memo-engagement-button"
+        onClick={() => navigateTo(`/${memoData.name}#comments`, { state: { from: parentPage } })}
+      >
+        <MessageCircleIcon className="size-4" />
+        <span>{commentAmount}</span>
+      </button>
+    </div>
+  );
+
   const article = (
     <article
-      className={cn(MEMO_CARD_BASE_CLASSES, showCommentPreview ? "mb-0 rounded-b-none" : "mb-2", className)}
+      className={cn(
+        MEMO_CARD_BASE_CLASSES,
+        showCommentPreview ? "mb-0 rounded-b-none" : "mb-2",
+        canOpenDetail && "cursor-pointer",
+        className,
+      )}
       ref={cardRef}
-      tabIndex={readonly ? -1 : 0}
+      tabIndex={canOpenDetail ? 0 : readonly ? -1 : 0}
+      role={canOpenDetail ? "link" : undefined}
+      onClick={handleArticleClick}
+      onKeyDown={handleArticleKeyDown}
     >
       <MemoHeader showCreator={showCreator} showVisibility={showVisibility} showPinned={showPinned} />
 
-      <MemoBody compact={compact} />
+      <MemoBody compact={compact} showReactions={!props.showEngagement} />
+      {engagementBar}
 
       <PreviewImageDialog
         open={previewState.open}

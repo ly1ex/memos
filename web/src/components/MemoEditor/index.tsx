@@ -35,6 +35,10 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   autoFocus,
   placeholder,
   defaultCreateTime,
+  entryType = "MEMO",
+  defaultVisibility: defaultVisibilityProp,
+  visibilityOptions,
+  showVisibilitySelector = true,
   onConfirm,
   onCancel,
 }) => {
@@ -55,7 +59,9 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   const memoName = memo?.name;
 
   // Get default visibility from user settings
-  const defaultVisibility = userGeneralSetting?.memoVisibility ? convertVisibilityFromString(userGeneralSetting.memoVisibility) : undefined;
+  const defaultVisibility =
+    defaultVisibilityProp ??
+    (userGeneralSetting?.memoVisibility ? convertVisibilityFromString(userGeneralSetting.memoVisibility) : undefined);
 
   const { isInitialized } = useMemoInit({
     editorRef,
@@ -64,6 +70,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
     username: currentUser?.name ?? "",
     autoFocus,
     defaultVisibility,
+    defaultEntryType: entryType,
     defaultCreateTime,
   });
   const isDraftCacheEnabled = !memo;
@@ -89,6 +96,12 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
       }),
     );
   }, [defaultCreateTime, memo, isInitialized, actions, dispatch]);
+
+  useEffect(() => {
+    if (memo) return;
+    if (!isInitialized) return;
+    dispatch(actions.setMetadata(defaultVisibility === undefined ? { entryType } : { visibility: defaultVisibility, entryType }));
+  }, [defaultVisibility, entryType, memo, isInitialized, actions, dispatch]);
 
   const audioRecorder = useAudioRecorder({
     onRecordingComplete: (localFile: LocalFile) => {
@@ -189,7 +202,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
       // Reset editor state to initial values
       dispatch(actions.reset());
       if (!memoName && defaultVisibility) {
-        dispatch(actions.setMetadata({ visibility: defaultVisibility }));
+        dispatch(actions.setMetadata({ visibility: defaultVisibility, entryType }));
       }
       // Re-seed the calendar-derived timestamps so the popover stays visible
       // and subsequent memos in the same filter session keep the prefilled date.
@@ -263,7 +276,14 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
         {/* Metadata and toolbar grouped together at bottom */}
         <div className="w-full flex flex-col gap-2">
           <EditorMetadata memoName={memoName} />
-          <EditorToolbar onSave={handleSave} onCancel={onCancel} memoName={memoName} onAudioRecorderClick={handleAudioRecorderClick} />
+          <EditorToolbar
+            onSave={handleSave}
+            onCancel={onCancel}
+            memoName={memoName}
+            onAudioRecorderClick={handleAudioRecorderClick}
+            visibilityOptions={visibilityOptions}
+            showVisibilitySelector={showVisibilitySelector}
+          />
         </div>
       </div>
     </>

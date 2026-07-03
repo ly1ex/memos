@@ -9,11 +9,15 @@ const VisibilitySelector = (props: VisibilitySelectorProps) => {
   const { value, onChange } = props;
   const t = useTranslate();
 
-  const visibilityOptions = [
+  const allVisibilityOptions = [
     { value: Visibility.PRIVATE, label: t("memo.visibility.private") },
     { value: Visibility.PROTECTED, label: t("memo.visibility.protected") },
     { value: Visibility.PUBLIC, label: t("memo.visibility.public") },
   ] as const;
+  const allowedValues = props.options;
+  const visibilityOptions = allowedValues?.length
+    ? allVisibilityOptions.filter((option) => allowedValues.includes(option.value) || option.value === value)
+    : allVisibilityOptions;
 
   const currentLabel = visibilityOptions.find((option) => option.value === value)?.label || "";
 

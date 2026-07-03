@@ -2,6 +2,7 @@ import { BellIcon, CompassIcon, HomeIcon, InfoIcon, SettingsIcon, UserRoundIcon 
 import type { ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { UserNotification_Status } from "@/api/types";
+import { useSpace } from "@/contexts/SpaceContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useNotifications } from "@/hooks/useUserQueries";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,7 @@ const Navigation = ({ className }: Props) => {
   const t = useTranslate();
   const location = useLocation();
   const currentUser = useCurrentUser();
+  const { space } = useSpace();
   const { data: notifications = [] } = useNotifications();
   const unreadCount = notifications.filter((n) => n.status === UserNotification_Status.UNREAD).length;
   const profilePath = currentUser ? `/u/${encodeURIComponent(currentUser.username)}` : Routes.AUTH;
@@ -40,12 +42,16 @@ const Navigation = ({ className }: Props) => {
       icon: <HomeIcon className="size-5" />,
       end: true,
     },
-    {
-      id: "navigation-discover",
-      path: Routes.EXPLORE,
-      title: t("common.explore"),
-      icon: <CompassIcon className="size-5" />,
-    },
+    ...(space === "community"
+      ? [
+          {
+            id: "navigation-discover",
+            path: Routes.EXPLORE,
+            title: t("common.explore"),
+            icon: <CompassIcon className="size-5" />,
+          },
+        ]
+      : []),
     {
       id: "navigation-alerts",
       path: Routes.INBOX,

@@ -1,4 +1,4 @@
-import type { Attachment, Location, MemoRelation } from "@/api/types";
+import type { Attachment, Location, MemoEntryType, MemoRelation } from "@/api/types";
 import { Visibility } from "@/api/types";
 import type { LocalFile } from "../types/attachment";
 
@@ -8,6 +8,7 @@ export interface EditorState {
   content: string;
   metadata: {
     visibility: Visibility;
+    entryType: MemoEntryType;
     attachments: Attachment[];
     relations: MemoRelation[];
     location?: Location;
@@ -48,6 +49,7 @@ const defaultState: EditorState = {
   content: "",
   metadata: {
     visibility: Visibility.PRIVATE,
+    entryType: "MEMO",
     attachments: [],
     relations: [],
     location: undefined,

@@ -14,6 +14,9 @@ shareRoutes.get("/:shareId", async (c) => {
   if (!shared) {
     throw new HttpError(404, "not_found", "Share not found");
   }
+  if (shared.memo.entryType !== "COMMUNITY") {
+    throw new HttpError(404, "not_found", "Share not found");
+  }
 
   return c.json(
     ok({

@@ -1,16 +1,18 @@
 import { LockIcon, SearchIcon } from "lucide-react";
+import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { cn } from "@/lib/utils";
 import { Routes } from "@/router";
 import { useTranslate } from "@/utils/i18n";
-import UserMenu from "./UserMenu";
+import LuminaSearchDialog from "./LuminaSearchDialog";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 const LuminaTopBar = () => {
   const t = useTranslate();
   const currentUser = useCurrentUser();
+  const [searchOpen, setSearchOpen] = useState(false);
   const profilePath = currentUser ? `/u/${encodeURIComponent(currentUser.username)}` : Routes.AUTH;
 
   return (
@@ -24,13 +26,14 @@ const LuminaTopBar = () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link
-                  className={cn("lumina-icon-button", !currentUser && "opacity-50")}
-                  to={currentUser ? Routes.SHORTCUTS : Routes.EXPLORE}
+                <button
+                  type="button"
+                  className={cn("lumina-icon-button", !currentUser && "opacity-70")}
+                  onClick={() => setSearchOpen(true)}
                   aria-label={t("common.search")}
                 >
                   <SearchIcon className="size-5" />
-                </Link>
+                </button>
               </TooltipTrigger>
               <TooltipContent>{t("common.search")}</TooltipContent>
             </Tooltip>
@@ -46,13 +49,14 @@ const LuminaTopBar = () => {
           </TooltipProvider>
 
           {currentUser ? (
-            <div className="lumina-avatar-trigger">
-              <UserMenu collapsed />
-            </div>
+            <LuminaSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
           ) : (
-            <Button asChild size="sm" className="rounded-full px-4">
-              <Link to={Routes.AUTH}>{t("common.sign-in")}</Link>
-            </Button>
+            <>
+              <LuminaSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+              <Button asChild size="sm" className="rounded-full px-4">
+                <Link to={Routes.AUTH}>{t("common.sign-in")}</Link>
+              </Button>
+            </>
           )}
         </div>
       </div>

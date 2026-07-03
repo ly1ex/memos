@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Location, Memo, Visibility } from "@/api/types";
+import type { Location, Memo, MemoEntryType, Visibility } from "@/api/types";
 import type { AudioRecorderStatus } from "../hooks/useAudioRecorder";
 
 export interface MemoEditorProps {
@@ -19,6 +19,10 @@ export interface MemoEditorProps {
    * in edit mode (when `memo` is set).
    */
   defaultCreateTime?: Date;
+  entryType?: MemoEntryType;
+  defaultVisibility?: Visibility;
+  visibilityOptions?: Visibility[];
+  showVisibilitySelector?: boolean;
   onConfirm?: (memoName: string) => void;
   onCancel?: () => void;
 }
@@ -32,6 +36,8 @@ export interface EditorToolbarProps {
   onCancel?: () => void;
   memoName?: string;
   onAudioRecorderClick: () => void;
+  visibilityOptions?: Visibility[];
+  showVisibilitySelector?: boolean;
 }
 
 export interface EditorMetadataProps {
@@ -70,4 +76,5 @@ export interface VisibilitySelectorProps {
   value: Visibility;
   onChange: (visibility: Visibility) => void;
   onOpenChange?: (open: boolean) => void;
+  options?: Visibility[];
 }

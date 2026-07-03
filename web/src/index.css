@@ -55,6 +55,8 @@
     --lumina-primary: #17171c;
     --lumina-on-primary: #ffffff;
     --lumina-secondary: #35675d;
+    --lumina-space-accent: #17171c;
+    --lumina-space-wash: #eeece7;
     --lumina-error: #b30000;
     --lumina-error-bg: #ffdad6;
     --lumina-focus: #4c6ee6;
@@ -84,6 +86,8 @@
     --lumina-primary: #f0f1f1;
     --lumina-on-primary: #17171c;
     --lumina-secondary: #9dd1c4;
+    --lumina-space-accent: #9dd1c4;
+    --lumina-space-wash: rgba(157, 209, 196, 0.12);
     --lumina-error: #ffb4ab;
     --lumina-error-bg: rgba(255, 180, 171, 0.16);
     --lumina-focus: #b0c6ff;
@@ -97,6 +101,30 @@
     background: var(--lumina-background);
     color: var(--lumina-on-background);
     font-family: var(--lumina-font-body);
+    transition:
+      background-color 360ms ease,
+      color 360ms ease;
+  }
+
+  .lumina-app-shell[data-lumina-space="private"] {
+    --lumina-space-accent: #17171c;
+    --lumina-space-wash: #eeece7;
+  }
+
+  .lumina-app-shell[data-lumina-space="community"] {
+    --lumina-space-accent: #003c33;
+    --lumina-space-wash: #edfce9;
+    --lumina-secondary: #003c33;
+  }
+
+  [data-theme="default-dark"] .lumina-app-shell[data-lumina-space="private"] {
+    --lumina-space-accent: #f0f1f1;
+    --lumina-space-wash: rgba(240, 241, 241, 0.1);
+  }
+
+  [data-theme="default-dark"] .lumina-app-shell[data-lumina-space="community"] {
+    --lumina-space-accent: #9dd1c4;
+    --lumina-space-wash: rgba(157, 209, 196, 0.14);
   }
 
   .lumina-app-shell::before {
@@ -107,7 +135,7 @@
     content: "";
     background-image:
       radial-gradient(color-mix(in srgb, var(--lumina-hairline) 72%, transparent) 1px, transparent 1px),
-      linear-gradient(180deg, color-mix(in srgb, var(--lumina-surface) 56%, transparent), transparent 22rem);
+      linear-gradient(180deg, color-mix(in srgb, var(--lumina-space-wash) 52%, transparent), transparent 22rem);
     background-size: 24px 24px;
     opacity: 0.42;
   }
@@ -153,8 +181,76 @@
     width: 100%;
     flex-direction: column;
     align-items: center;
-    padding-top: 4rem;
+    padding-top: 1.75rem;
     padding-bottom: 7.5rem;
+    transition:
+      opacity 260ms ease,
+      transform 360ms ease,
+      filter 360ms ease;
+  }
+
+  .lumina-app-shell.is-space-transitioning .lumina-main {
+    animation: lumina-space-shift 520ms ease both;
+  }
+
+  @keyframes lumina-space-shift {
+    0% {
+      opacity: 0.72;
+      transform: translateY(10px) scale(0.992);
+      filter: blur(5px);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      filter: blur(0);
+    }
+  }
+
+  .lumina-space-lock {
+    position: fixed;
+    top: 50%;
+    right: 1.1rem;
+    z-index: 45;
+    display: inline-flex;
+    height: 3.75rem;
+    width: 3rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--lumina-glass-border);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--lumina-glass-strong) 88%, transparent);
+    color: var(--lumina-space-accent);
+    box-shadow:
+      var(--lumina-refractive-edge),
+      0 10px 28px rgba(23, 23, 28, 0.08);
+    transform: translateY(-50%);
+    backdrop-filter: blur(18px);
+    transition:
+      background-color 220ms ease,
+      border-color 220ms ease,
+      color 220ms ease,
+      transform 220ms ease;
+  }
+
+  .lumina-space-lock:hover {
+    border-color: color-mix(in srgb, var(--lumina-space-accent) 28%, var(--lumina-glass-border));
+    transform: translateY(-50%) translateX(-2px);
+  }
+
+  .lumina-space-lock-ring {
+    display: inline-flex;
+    height: 2.25rem;
+    width: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid color-mix(in srgb, var(--lumina-space-accent) 24%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--lumina-space-wash) 74%, var(--lumina-surface-lowest));
+  }
+
+  .lumina-space-lock.is-community {
+    background: color-mix(in srgb, #003c33 9%, var(--lumina-glass-strong));
   }
 
   .lumina-topbar {
@@ -216,6 +312,98 @@
 
   .lumina-icon-button:active {
     transform: scale(0.96);
+  }
+
+  .lumina-search-dialog {
+    width: min(calc(100% - 2rem), 34rem) !important;
+    padding: 0.6rem !important;
+  }
+
+  .lumina-search-dialog > div {
+    gap: 0;
+  }
+
+  .lumina-search-form {
+    display: flex;
+    min-height: 3.25rem;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid var(--lumina-glass-border);
+    border-radius: 0.65rem;
+    background: color-mix(in srgb, var(--lumina-surface-lowest) 78%, transparent);
+    padding: 0 0.55rem 0 0.9rem;
+    box-shadow: var(--lumina-refractive-edge);
+  }
+
+  .lumina-search-input {
+    height: 2.75rem !important;
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    font-size: 1rem !important;
+  }
+
+  .lumina-search-input:focus-visible {
+    box-shadow: none !important;
+  }
+
+  .lumina-search-clear {
+    height: 2rem !important;
+    width: 2rem !important;
+    border-radius: 999px !important;
+    color: var(--lumina-muted) !important;
+  }
+
+  .lumina-search-submit {
+    height: 2.25rem !important;
+    border-radius: 999px !important;
+    background: var(--lumina-primary) !important;
+    color: var(--lumina-on-primary) !important;
+    font-family: var(--lumina-font-mono);
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+  }
+
+  .lumina-inline-search {
+    position: relative;
+    display: flex;
+    width: 100%;
+    min-height: 2.5rem;
+    align-items: center;
+  }
+
+  .lumina-inline-search-input {
+    width: 100%;
+    height: 2.5rem;
+    border: 1px solid var(--lumina-glass-border);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--lumina-surface-lowest) 72%, transparent);
+    padding: 0 2.5rem 0 2.25rem;
+    color: var(--lumina-ink);
+    font-size: 0.95rem;
+    line-height: 1;
+    outline: 0;
+    box-shadow: var(--lumina-refractive-edge);
+  }
+
+  .lumina-inline-search-input::placeholder {
+    color: var(--lumina-muted);
+  }
+
+  .lumina-inline-search-input:focus {
+    border-color: var(--lumina-focus);
+    box-shadow:
+      var(--lumina-refractive-edge),
+      0 0 0 2px color-mix(in srgb, var(--lumina-focus) 18%, transparent);
+  }
+
+  .lumina-inline-search-menu {
+    position: absolute;
+    top: 50%;
+    right: 0.65rem;
+    transform: translateY(-50%);
+    color: var(--lumina-muted);
   }
 
   .lumina-avatar-trigger {
@@ -301,9 +489,9 @@
   }
 
   .lumina-page {
-    min-height: calc(100svh - 4rem);
+    min-height: 100svh;
     width: 100%;
-    padding: 3rem 1.25rem 0;
+    padding: 2.5rem 1.25rem 0;
   }
 
   .lumina-page-hero {
@@ -367,24 +555,26 @@
   }
 
   .lumina-home-page {
-    padding-top: 3rem;
+    padding-top: 2.25rem;
   }
 
   .lumina-home-feed {
-    max-width: 48rem;
+    max-width: 52rem;
   }
 
   .lumina-editor {
     min-height: 0;
     border: 1px solid var(--lumina-glass-border) !important;
-    border-radius: 0.75rem !important;
-    background: var(--lumina-glass-bg) !important;
-    padding: 1.5rem;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.42),
-      inset 0 -1px 0 rgba(217, 217, 221, 0.2),
-      0 1px 2px rgba(0, 0, 0, 0.04);
+    border-radius: 1.35rem !important;
+    background: color-mix(in srgb, var(--lumina-surface-lowest) 82%, transparent) !important;
+    padding: 1.75rem;
+    box-shadow: var(--lumina-refractive-edge);
     backdrop-filter: blur(20px);
+  }
+
+  .lumina-app-shell[data-lumina-space="community"] .lumina-editor {
+    border-color: color-mix(in srgb, var(--lumina-space-accent) 24%, var(--lumina-glass-border)) !important;
+    background: color-mix(in srgb, var(--lumina-space-wash) 30%, var(--lumina-surface-lowest)) !important;
   }
 
   .lumina-editor .memo-editor-content .cm-editor {
@@ -411,7 +601,7 @@
     min-width: 5.5rem;
     height: 2.45rem;
     border-radius: 999px !important;
-    background: var(--lumina-primary) !important;
+    background: var(--lumina-space-accent) !important;
     color: var(--lumina-on-primary) !important;
     font-family: var(--lumina-font-mono);
     font-size: 0.82rem;
@@ -419,7 +609,7 @@
   }
 
   .lumina-post-button:hover {
-    background: var(--lumina-ink) !important;
+    background: color-mix(in srgb, var(--lumina-space-accent) 86%, var(--lumina-ink)) !important;
   }
 
   .lumina-filters {
@@ -428,7 +618,10 @@
   }
 
   .lumina-memo-stack {
-    margin-top: 3rem;
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
   }
 
   .lumina-memo-card {
@@ -439,31 +632,133 @@
 
   .lumina-memo-card.lumina-feed-memo {
     margin-bottom: 0 !important;
-    border-width: 0 0 1px !important;
-    border-color: var(--lumina-hairline) !important;
+    border: 1px solid var(--lumina-glass-border) !important;
     border-radius: 0.5rem !important;
-    background: transparent !important;
-    padding: 2rem 1rem !important;
-    box-shadow: none !important;
+    background: color-mix(in srgb, var(--lumina-surface-lowest) 94%, transparent) !important;
+    padding: 1.6rem 1.8rem !important;
+    box-shadow: var(--lumina-refractive-edge) !important;
     backdrop-filter: none !important;
     transition:
       background-color 160ms ease,
+      border-color 160ms ease,
+      box-shadow 160ms ease,
       transform 160ms ease;
   }
 
   .lumina-memo-card.lumina-feed-memo:hover {
-    background: color-mix(in srgb, var(--lumina-surface-low) 52%, transparent) !important;
+    border-color: color-mix(in srgb, var(--lumina-slate) 28%, var(--lumina-glass-border)) !important;
+    background: var(--lumina-surface-lowest) !important;
+    box-shadow:
+      var(--lumina-refractive-edge),
+      0 10px 26px rgba(23, 23, 28, 0.05) !important;
+  }
+
+  .lumina-app-shell[data-lumina-space="community"] .lumina-memo-card.lumina-feed-memo {
+    border-color: color-mix(in srgb, var(--lumina-space-accent) 18%, var(--lumina-glass-border)) !important;
   }
 
   .lumina-feed-memo [data-memo-content] {
-    color: var(--lumina-ink);
+    color: color-mix(in srgb, var(--lumina-ink) 92%, var(--lumina-body-muted));
     font-family: var(--lumina-font-body);
-    font-size: 1rem;
-    line-height: 1.65;
+    font-size: 1.08rem;
+    line-height: 1.64;
   }
 
   .lumina-feed-memo [data-memo-content] p {
-    margin-bottom: 1rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .lumina-feed-memo [data-memo-content] h1,
+  .lumina-feed-memo [data-memo-content] h2,
+  .lumina-feed-memo [data-memo-content] h3 {
+    color: var(--lumina-ink);
+    font-family: var(--lumina-font-body);
+    font-weight: 400;
+    line-height: 1.2;
+  }
+
+  .lumina-feed-memo [data-memo-content] h1 {
+    font-size: 1.75rem;
+  }
+
+  .lumina-feed-memo [data-memo-content] h2 {
+    font-size: 1.4rem;
+  }
+
+  .lumina-feed-memo .memo-header,
+  .lumina-discover-card .memo-header {
+    align-items: flex-start;
+    margin-bottom: 0.7rem;
+  }
+
+  .lumina-feed-memo .memo-header-main,
+  .lumina-discover-card .memo-header-main {
+    max-width: calc(100% - 4.25rem);
+  }
+
+  .lumina-feed-memo .memo-creator-avatar,
+  .lumina-discover-card .memo-creator-avatar {
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 999px;
+    border-color: transparent;
+    background: var(--lumina-surface-low);
+  }
+
+  .lumina-feed-memo .memo-creator-name,
+  .lumina-discover-card .memo-creator-name {
+    color: var(--lumina-ink);
+    font-family: var(--lumina-font-body);
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+
+  .lumina-feed-memo .memo-creator-meta,
+  .lumina-discover-card .memo-creator-meta {
+    margin-top: 0.18rem;
+    color: var(--lumina-muted);
+    font-family: var(--lumina-font-body);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .lumina-feed-memo .memo-header-actions,
+  .lumina-discover-card .memo-header-actions {
+    gap: 0.65rem;
+    color: var(--lumina-muted);
+  }
+
+  .lumina-feed-memo .memo-header-actions [data-slot="button"],
+  .lumina-discover-card .memo-header-actions [data-slot="button"] {
+    width: 1.65rem;
+    height: 1.65rem;
+    color: var(--lumina-muted);
+  }
+
+  .memo-engagement-bar {
+    margin-top: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1.35rem;
+    color: var(--lumina-muted);
+  }
+
+  .memo-engagement-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: inherit;
+    font-family: var(--lumina-font-body);
+    font-size: 0.95rem;
+    line-height: 1;
+    transition:
+      color 150ms ease,
+      transform 150ms ease;
+  }
+
+  .memo-engagement-button:hover {
+    color: var(--lumina-ink);
+    transform: translateY(-1px);
   }
 
   .lumina-discover-page {
@@ -477,24 +772,171 @@
   .lumina-discover-stack {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1.5rem;
   }
 
   .lumina-memo-card.lumina-discover-card {
     margin-bottom: 0 !important;
     border: 1px solid var(--lumina-glass-border) !important;
-    border-radius: 0.75rem !important;
-    background: var(--lumina-surface-lowest) !important;
-    padding: 1.5rem !important;
-    box-shadow: none !important;
+    border-radius: 0.65rem !important;
+    background: color-mix(in srgb, var(--lumina-surface-lowest) 88%, transparent) !important;
+    padding: 1.75rem 2rem !important;
+    box-shadow:
+      var(--lumina-refractive-edge),
+      0 12px 36px rgba(23, 23, 28, 0.045) !important;
     backdrop-filter: none !important;
   }
 
   .lumina-discover-card [data-memo-content] {
-    color: var(--lumina-surface-tint);
+    color: color-mix(in srgb, var(--lumina-ink) 92%, var(--lumina-body-muted));
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.18rem;
+    line-height: 1.72;
+  }
+
+  .lumina-detail-page {
+    padding-top: 2.25rem;
+  }
+
+  .lumina-detail-shell {
+    display: block;
+    width: min(100%, 54rem);
+    margin: 0 auto;
+  }
+
+  .lumina-detail-main {
+    width: 100%;
+    min-width: 0;
+    max-width: 54rem;
+    margin: 0 auto;
+  }
+
+  .lumina-detail-sidebar {
+    position: sticky;
+    top: 5rem;
+    width: 14rem;
+    max-height: calc(100svh - 6rem);
+    flex: none;
+    overflow: auto;
+  }
+
+  .lumina-memo-card.lumina-detail-memo {
+    margin-bottom: 0 !important;
+    border: 1px solid var(--lumina-glass-border) !important;
+    border-radius: 1.35rem 1.35rem 0 0 !important;
+    background: color-mix(in srgb, var(--lumina-surface-lowest) 94%, transparent) !important;
+    padding: 1.75rem !important;
+    box-shadow: var(--lumina-refractive-edge) !important;
+    backdrop-filter: none !important;
+  }
+
+  .lumina-detail-memo [data-memo-content] {
+    color: var(--lumina-ink);
     font-family: var(--lumina-font-body);
-    font-size: 1rem;
-    line-height: 1.6;
+    font-size: 1.04rem;
+    line-height: 1.7;
+  }
+
+  .lumina-detail-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: 0;
+    overflow: hidden;
+    border: 1px solid var(--lumina-glass-border);
+    border-top: 0;
+    background: color-mix(in srgb, var(--lumina-surface-lowest) 84%, transparent);
+    backdrop-filter: blur(16px);
+  }
+
+  .lumina-detail-action-button {
+    min-height: 3rem !important;
+    justify-content: center !important;
+    border-radius: 0 !important;
+    color: var(--lumina-body-muted) !important;
+    font-family: var(--lumina-font-body);
+    font-weight: 500 !important;
+  }
+
+  .lumina-detail-action-button + .lumina-detail-action-button {
+    border-left: 1px solid var(--lumina-hairline);
+  }
+
+  .lumina-detail-action-button:hover {
+    background: var(--lumina-surface-low) !important;
+    color: var(--lumina-ink) !important;
+  }
+
+  .lumina-detail-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    border: 1px solid var(--lumina-glass-border);
+    border-top: 0;
+    border-radius: 0 0 1.35rem 1.35rem;
+    background: color-mix(in srgb, var(--lumina-surface-lowest) 78%, transparent);
+    padding: 1rem;
+    box-shadow: var(--lumina-refractive-edge);
+  }
+
+  .lumina-detail-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .lumina-detail-info-item {
+    min-width: 0;
+    border-radius: 0.5rem;
+    background: color-mix(in srgb, var(--lumina-surface-low) 50%, transparent);
+    padding: 0.75rem;
+  }
+
+  .lumina-detail-info-item span {
+    display: block;
+    color: var(--lumina-muted);
+    font-family: var(--lumina-font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1.2;
+  }
+
+  .lumina-detail-info-item strong {
+    margin-top: 0.45rem;
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--lumina-ink);
+    font-family: var(--lumina-font-body);
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.3;
+    word-break: break-word;
+  }
+
+  .lumina-detail-token-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .lumina-detail-token-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .lumina-detail-token {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border: 1px solid var(--lumina-glass-border);
+    border-radius: 999px;
+    background: var(--lumina-surface-low);
+    padding: 0.25rem 0.55rem;
+    color: var(--lumina-body-muted);
+    font-size: 0.82rem;
+    line-height: 1;
   }
 
   .lumina-alerts-page {
@@ -693,6 +1135,100 @@
     color: var(--lumina-ink);
   }
 
+  .lumina-settings-page {
+    width: min(100%, 58rem);
+    margin: 0 auto;
+    padding-top: 3.75rem;
+  }
+
+  .lumina-app-shell .setting-surface {
+    border: 1px solid var(--lumina-glass-border);
+    border-radius: 0.75rem;
+    background: var(--lumina-glass-bg);
+    box-shadow: var(--lumina-refractive-edge), var(--lumina-panel-shadow);
+    backdrop-filter: blur(24px);
+  }
+
+  .lumina-settings-identity {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+
+  .lumina-settings-expanded-stack {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .lumina-settings-expanded-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-top: 0.5rem;
+  }
+
+  .lumina-settings-expanded-panel {
+    overflow: hidden;
+  }
+
+  .lumina-settings-expanded-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--lumina-hairline);
+    padding: 1rem 1.25rem;
+  }
+
+  .lumina-settings-expanded-header h2 {
+    color: var(--lumina-ink);
+    font-family: var(--lumina-font-mono);
+    font-size: 1.05rem;
+    font-weight: 500;
+  }
+
+  .lumina-settings-expanded-icon {
+    display: inline-flex;
+    height: 2rem;
+    width: 2rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--lumina-surface-low);
+    color: var(--lumina-body-muted);
+  }
+
+  .lumina-settings-expanded-body {
+    padding: 1.25rem;
+  }
+
+  .lumina-settings-expanded-body .setting-section-header {
+    display: none;
+  }
+
+  .lumina-settings-expanded-body > div {
+    max-width: none;
+    padding: 0;
+  }
+
+  .lumina-settings-version {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    padding: 1rem 1.25rem;
+    color: var(--lumina-muted);
+    font-size: 0.9rem;
+  }
+
+  .lumina-settings-version strong {
+    color: var(--lumina-ink);
+    font-family: var(--lumina-font-mono);
+    font-weight: 500;
+  }
+
   .lumina-profile-page {
     display: flex;
     flex-direction: column;
@@ -720,6 +1256,26 @@
     opacity: 0.05;
     filter: blur(50px);
     content: "";
+  }
+
+  .lumina-profile-avatar-button {
+    border-radius: 999px;
+    transition:
+      transform 150ms ease,
+      opacity 150ms ease;
+  }
+
+  .lumina-profile-avatar-button:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+  }
+
+  .lumina-profile-actions {
+    margin-top: 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
   }
 
   .lumina-profile-stats {
@@ -854,24 +1410,26 @@
     align-items: center;
     justify-content: center;
     border-radius: 999px;
-    background: var(--lumina-primary);
+    background: var(--lumina-space-accent);
     color: var(--lumina-on-primary);
     box-shadow: 0 14px 28px rgba(0, 0, 0, 0.12);
   }
 
   @media (max-width: 767px) {
     .lumina-main {
-      padding-top: 3.6rem;
+      padding-top: 1rem;
       padding-bottom: 6.75rem;
     }
 
-    .lumina-topbar-inner {
-      height: 3.6rem;
-      padding: 0 0.9rem;
+    .lumina-space-lock {
+      right: 0.75rem;
+      height: 3.35rem;
+      width: 2.7rem;
     }
 
-    .lumina-brand {
-      font-size: 1.15rem;
+    .lumina-space-lock-ring {
+      height: 2rem;
+      width: 2rem;
     }
 
     .lumina-bottom-nav {
@@ -916,18 +1474,56 @@
     }
 
     .lumina-memo-stack {
-      margin-top: 2.2rem;
+      margin-top: 1.5rem;
+      gap: 1rem;
     }
 
     .lumina-memo-card.lumina-feed-memo {
-      padding-right: 0 !important;
-      padding-left: 0 !important;
+      border-radius: 0.65rem !important;
+      padding: 1.15rem !important;
+    }
+
+    .lumina-detail-page {
+      padding-right: 1rem;
+      padding-left: 1rem;
+      padding-top: 1rem;
+    }
+
+    .lumina-detail-shell {
+      width: 100%;
+      display: block;
+    }
+
+    .lumina-memo-card.lumina-detail-memo {
+      padding: 1rem !important;
+    }
+
+    .lumina-detail-actions {
+      grid-template-columns: 1fr;
+    }
+
+    .lumina-detail-action-button + .lumina-detail-action-button {
+      border-top: 1px solid var(--lumina-hairline);
+      border-left: 0;
+    }
+
+    .lumina-detail-info-grid {
+      grid-template-columns: 1fr;
     }
 
     .lumina-feed-memo [data-memo-content],
     .lumina-discover-card [data-memo-content] {
-      font-size: 1rem;
-      line-height: 1.65;
+      font-size: 1.05rem;
+      line-height: 1.68;
+    }
+
+    .lumina-feed-memo [data-memo-content] h1,
+    .lumina-discover-card [data-memo-content] h1 {
+      font-size: 1.45rem;
+    }
+
+    .memo-engagement-bar {
+      margin-top: 1rem;
     }
 
     .lumina-alerts-panel,
@@ -938,6 +1534,21 @@
 
     .lumina-sanctuary-card {
       padding: 1.5rem;
+    }
+
+    .lumina-settings-page {
+      padding-top: 2rem;
+    }
+
+    .lumina-settings-identity {
+      align-items: flex-start;
+      flex-direction: column;
+      padding: 1rem;
+    }
+
+    .lumina-settings-expanded-header,
+    .lumina-settings-expanded-body {
+      padding: 1rem;
     }
 
     .lumina-identity-row,

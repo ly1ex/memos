@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 
 import { canReadMemo, canWriteMemo } from "../auth/memo-access";
+import type { MemoEntryType } from "../domain/memo-payload";
 import type { AppEnv } from "../env";
 import { HttpError } from "../http/errors";
 import { optionalBoolean, optionalString, readJsonObject, requiredString } from "../http/request";
@@ -26,7 +27,9 @@ memoRoutes.get("/", async (c) => {
   const page = await listVisibleMemos(c.env.DB, {
     viewerId: auth?.localUser.id,
     pageSize,
-    cursor: c.req.query("cursor") ?? null
+    cursor: c.req.query("cursor") ?? null,
+    space: parseMemoSpace(c.req.query("space")),
+    entryType: parseOptionalMemoEntryType(c.req.query("entryType"))
   });
 
   return c.json(
@@ -41,11 +44,13 @@ memoRoutes.post("/", requireAuth, async (c) => {
   const auth = c.get("auth");
   const body = await readJsonObject(c);
   const memoBody = typeof body.memo === "object" && body.memo !== null && !Array.isArray(body.memo) ? (body.memo as Record<string, unknown>) : body;
+  const entryType = parseMemoEntryTypeInput(memoBody.entryType, "MEMO");
   const memo = await createMemo(c.env.DB, {
     uid: optionalString(body, "memoId") ?? optionalString(body, "memo_id"),
     creatorId: auth.localUser.id,
     content: requiredString(memoBody, "content"),
-    visibility: parseMemoVisibility(memoBody.visibility, "PRIVATE")
+    visibility: initialVisibilityForEntryType(entryType),
+    entryType
   });
 
   return c.json(ok({ memo: toMemoResponse(memo) }), 201);
@@ -95,7 +100,8 @@ memoRoutes.post("/:id/comments", requireAuth, async (c) => {
   const comment = await createMemo(c.env.DB, {
     creatorId: auth.localUser.id,
     content,
-    visibility: parent.visibility
+    visibility: parent.visibility,
+    entryType: parent.entryType
   });
   await createMemoRelation(c.env.DB, {
     memoId: parent.id,
@@ -163,6 +169,9 @@ memoRoutes.get("/:id/shares", requireAuth, async (c) => {
 
 memoRoutes.post("/:id/shares", requireAuth, async (c) => {
   const memo = await requireWritableMemo(c, c.req.param("id"));
+  if (memo.entryType !== "COMMUNITY") {
+    throw new HttpError(403, "permission_denied", "Only community posts can create public share links");
+  }
   const body: Record<string, unknown> = await readJsonObject(c).catch(() => ({}));
   const share = await createMemoShare(c.env.DB, {
     memoId: memo.id,
@@ -232,14 +241,27 @@ memoRoutes.get("/:id", async (c) => {
 
 memoRoutes.patch("/:id", requireAuth, async (c) => {
   const id = c.req.param("id");
-  await requireWritableMemo(c, id);
+  const existingMemo = await requireWritableMemo(c, id);
 
   const body = await readJsonObject(c);
   const memoBody = typeof body.memo === "object" && body.memo !== null && !Array.isArray(body.memo) ? (body.memo as Record<string, unknown>) : body;
+  const entryType = memoBody.entryType === undefined ? undefined : parseMemoEntryTypeInput(memoBody.entryType, existingMemo.entryType);
+  const requestedVisibility =
+    memoBody.visibility === undefined ? undefined : parseMemoVisibility(memoBody.visibility, existingMemo.visibility);
+  const promotedEntryType =
+    (entryType ?? existingMemo.entryType) === "MEMO" && requestedVisibility === "PUBLIC" ? "COMMUNITY" : entryType;
+  const effectiveEntryType = promotedEntryType ?? existingMemo.entryType;
+  const nextVisibility =
+    requestedVisibility === undefined
+      ? promotedEntryType === undefined
+        ? undefined
+        : constrainVisibilityForEntryType(effectiveEntryType, existingMemo.visibility)
+      : constrainVisibilityForEntryType(effectiveEntryType, requestedVisibility);
   const memo = await updateMemo(c.env.DB, await memoNumericId(c.env.DB, id), {
     content: optionalString(memoBody, "content"),
-    visibility: memoBody.visibility === undefined ? undefined : parseMemoVisibility(memoBody.visibility, "PRIVATE"),
-    pinned: optionalBoolean(memoBody, "pinned")
+    visibility: nextVisibility,
+    pinned: optionalBoolean(memoBody, "pinned"),
+    entryType: promotedEntryType
   });
 
   if (!memo) {
@@ -392,6 +414,50 @@ function parseOptionalExpiresTs(value: unknown): number | undefined {
     throw new HttpError(400, "bad_request", "Invalid share expiration");
   }
   return value;
+}
+
+function parseMemoSpace(value: unknown): "PRIVATE" | "COMMUNITY" | null {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  if (value === "private" || value === "PRIVATE") {
+    return "PRIVATE";
+  }
+  if (value === "community" || value === "COMMUNITY") {
+    return "COMMUNITY";
+  }
+  throw new HttpError(400, "bad_request", "Invalid memo space");
+}
+
+function parseOptionalMemoEntryType(value: unknown): MemoEntryType | null {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  return parseMemoEntryTypeInput(value, "MEMO");
+}
+
+function parseMemoEntryTypeInput(value: unknown, fallback: MemoEntryType): MemoEntryType {
+  if (value === undefined || value === null || value === "") {
+    return fallback;
+  }
+  if (value === "MEMO" || value === "DIARY" || value === "COMMUNITY") {
+    return value;
+  }
+  throw new HttpError(400, "bad_request", "Invalid memo entry type");
+}
+
+function constrainVisibilityForEntryType(entryType: MemoEntryType, visibility: ReturnType<typeof parseMemoVisibility>) {
+  if (entryType === "COMMUNITY") {
+    return "PUBLIC";
+  }
+  if (entryType === "DIARY") {
+    return "PRIVATE";
+  }
+  return visibility;
+}
+
+function initialVisibilityForEntryType(entryType: MemoEntryType): ReturnType<typeof parseMemoVisibility> {
+  return entryType === "COMMUNITY" ? "PUBLIC" : "PRIVATE";
 }
 
 function parseReactionType(value: string): string {

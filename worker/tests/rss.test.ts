@@ -14,6 +14,7 @@ describe("RSS XML", () => {
           creatorId: 1,
           content: "Hello <world> & friends",
           visibility: "PUBLIC",
+          entryType: "COMMUNITY",
           rowStatus: "NORMAL",
           pinned: false,
           payload: {},
@@ -28,4 +29,3 @@ describe("RSS XML", () => {
     expect(xml).toContain("https://example.com/m/1");
   });
 });
-

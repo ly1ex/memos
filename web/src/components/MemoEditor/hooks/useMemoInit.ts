@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Memo, Visibility } from "@/api/types";
+import type { Memo, MemoEntryType, Visibility } from "@/api/types";
 import { cacheService, memoService } from "../services";
 import { useEditorContext } from "../state";
 import type { EditorController } from "../types/editorController";
@@ -11,6 +11,7 @@ interface UseMemoInitOptions {
   username: string;
   autoFocus?: boolean;
   defaultVisibility?: Visibility;
+  defaultEntryType?: MemoEntryType;
   defaultCreateTime?: Date;
 }
 
@@ -21,6 +22,7 @@ export const useMemoInit = ({
   username,
   autoFocus,
   defaultVisibility,
+  defaultEntryType,
   defaultCreateTime,
 }: UseMemoInitOptions) => {
   const { actions, dispatch } = useEditorContext();
@@ -44,6 +46,9 @@ export const useMemoInit = ({
       if (defaultVisibility !== undefined) {
         dispatch(actions.setMetadata({ visibility: defaultVisibility }));
       }
+      if (defaultEntryType !== undefined) {
+        dispatch(actions.setMetadata({ entryType: defaultEntryType }));
+      }
       if (defaultCreateTime) {
         dispatch(actions.setTimestamps({ createTime: defaultCreateTime, updateTime: defaultCreateTime }));
       }
@@ -54,7 +59,7 @@ export const useMemoInit = ({
     }
 
     setIsInitialized(true);
-  }, [memo, cacheKey, username, autoFocus, defaultVisibility, defaultCreateTime, actions, dispatch, editorRef]);
+  }, [memo, cacheKey, username, autoFocus, defaultVisibility, defaultEntryType, defaultCreateTime, actions, dispatch, editorRef]);
 
   return { isInitialized };
 };

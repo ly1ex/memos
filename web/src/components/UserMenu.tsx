@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useSSEConnectionStatus } from "@/hooks/useLiveMemoRefresh";
 import useNavigateTo from "@/hooks/useNavigateTo";
+import { useSignOut } from "@/hooks/useSignOut";
 import { useUpdateUserGeneralSetting } from "@/hooks/useUserQueries";
 import { cn } from "@/lib/utils";
 import { Routes } from "@/router";
@@ -44,7 +45,8 @@ const UserMenu = (props: Props) => {
   const t = useTranslate();
   const navigateTo = useNavigateTo();
   const currentUser = useCurrentUser();
-  const { userGeneralSetting, refetchSettings, logout } = useAuth();
+  const { userGeneralSetting, refetchSettings } = useAuth();
+  const signOut = useSignOut();
   const { mutate: updateUserGeneralSetting } = useUpdateUserGeneralSetting(currentUser?.name);
   const sseStatus = useSSEConnectionStatus();
   const currentLocale = getLocaleWithFallback(userGeneralSetting?.locale);
@@ -78,32 +80,6 @@ const UserMenu = (props: Props) => {
         },
       },
     );
-  };
-
-  const handleSignOut = async () => {
-    // First, clear auth state and cache BEFORE doing anything else
-    await logout();
-
-    try {
-      // Then clear user-specific localStorage items
-      // Preserve app-wide settings (theme, locale, view preferences, tag view settings)
-      const keysToPreserve = ["memos-theme", "memos-locale", "memos-view-setting", "tag-view-as-tree", "tag-tree-auto-expand"];
-      const keysToRemove: string[] = [];
-
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && !keysToPreserve.includes(key)) {
-          keysToRemove.push(key);
-        }
-      }
-
-      keysToRemove.forEach((key) => localStorage.removeItem(key));
-    } catch {
-      // Ignore errors from localStorage operations
-    }
-
-    // Always redirect to auth page (use replace to prevent back navigation)
-    window.location.replace(Routes.AUTH);
   };
 
   return (
@@ -180,7 +156,7 @@ const UserMenu = (props: Props) => {
           <SettingsIcon className="size-4 text-muted-foreground" />
           {t("common.settings")}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleSignOut}>
+        <DropdownMenuItem onClick={signOut}>
           <LogOutIcon className="size-4 text-muted-foreground" />
           {t("common.sign-out")}
         </DropdownMenuItem>

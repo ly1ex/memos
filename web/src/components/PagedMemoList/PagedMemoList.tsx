@@ -3,7 +3,7 @@ import { ArrowUpIcon } from "lucide-react";
 import { type ReactElement, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { userApi } from "@/api/client";
 import type { Memo } from "@/api/types";
-import { State } from "@/api/types";
+import { type MemoEntryType, type MemoSpace, State, Visibility } from "@/api/types";
 import { MentionResolutionProvider } from "@/components/MemoContent/MentionResolutionContext";
 import { deriveDefaultCreateTimeFromFilters } from "@/components/MemoEditor/utils/deriveDefaultCreateTime";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,8 @@ interface Props {
   orderBy?: string;
   filter?: string;
   pageSize?: number;
+  space?: MemoSpace;
+  entryType?: MemoEntryType;
   showCreator?: boolean;
   enabled?: boolean;
   /** When true, render the inline MemoEditor above the list (e.g. on the Home page). */
@@ -37,6 +39,11 @@ interface Props {
   editorClassName?: string;
   filtersClassName?: string;
   editorHeader?: ReactNode;
+  editorCacheKey?: string;
+  editorPlaceholder?: string;
+  editorDefaultVisibility?: Visibility;
+  editorVisibilityOptions?: Visibility[];
+  editorShowVisibilitySelector?: boolean;
 }
 
 function useAutoFetchWhenNotScrollable({
@@ -104,6 +111,8 @@ const PagedMemoList = (props: Props) => {
       orderBy: props.orderBy || "create_time desc",
       filter: props.filter,
       pageSize: props.pageSize || DEFAULT_LIST_MEMOS_PAGE_SIZE,
+      space: props.space,
+      entryType: props.entryType,
     },
     { enabled: props.enabled ?? true },
   );
@@ -179,9 +188,13 @@ const PagedMemoList = (props: Props) => {
               <MemoEditor
                 className={cn("mb-2", props.editorClassName)}
                 header={props.editorHeader}
-                cacheKey="home-memo-editor"
-                placeholder={t("editor.any-thoughts")}
+                cacheKey={props.editorCacheKey ?? "home-memo-editor"}
+                placeholder={props.editorPlaceholder ?? t("editor.any-thoughts")}
                 defaultCreateTime={defaultCreateTime}
+                entryType={props.entryType}
+                defaultVisibility={props.editorDefaultVisibility}
+                visibilityOptions={props.editorVisibilityOptions}
+                showVisibilitySelector={props.editorShowVisibilitySelector}
               />
             ) : null}
             <div className={props.filtersClassName}>

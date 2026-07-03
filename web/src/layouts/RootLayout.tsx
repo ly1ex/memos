@@ -1,9 +1,11 @@
 import { useEffect, useRef } from "react";
 import { Outlet, useLocation, useSearchParams } from "react-router-dom";
-import LuminaTopBar from "@/components/LuminaTopBar";
 import Navigation from "@/components/Navigation";
+import SpaceLockToggle from "@/components/SpaceLockToggle";
 import { useInstance } from "@/contexts/InstanceContext";
 import { useMemoFilterContext } from "@/contexts/MemoFilterContext";
+import { useSpace } from "@/contexts/SpaceContext";
+import { cn } from "@/lib/utils";
 import { useTranslate } from "@/utils/i18n";
 
 const MEMOS_DEPLOY_URL = "https://usememos.com/docs/deploy";
@@ -29,6 +31,7 @@ const RootLayout = () => {
   const [searchParams] = useSearchParams();
   const { profile } = useInstance();
   const { removeFilter } = useMemoFilterContext();
+  const { space, isTransitioning } = useSpace();
   const { pathname } = location;
   const prevPathnameRef = useRef<string | undefined>(undefined);
 
@@ -44,12 +47,12 @@ const RootLayout = () => {
   }, [pathname, searchParams, removeFilter]);
 
   return (
-    <div className="lumina-app-shell">
-      <LuminaTopBar />
+    <div className={cn("lumina-app-shell", isTransitioning && "is-space-transitioning")} data-lumina-space={space}>
       <main className="lumina-main">
         {profile.demo && <DemoBanner />}
         <Outlet />
       </main>
+      <SpaceLockToggle />
       <Navigation />
     </div>
   );

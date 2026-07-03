@@ -1,16 +1,5 @@
 import { uniqBy } from "lodash-es";
-import {
-  FileIcon,
-  ImageIcon,
-  LinkIcon,
-  LoaderIcon,
-  type LucideIcon,
-  MapPinIcon,
-  Maximize2Icon,
-  MicIcon,
-  MoreHorizontalIcon,
-  PlusIcon,
-} from "lucide-react";
+import { FileIcon, ImageIcon, LinkIcon, LoaderIcon, type LucideIcon, MapPinIcon, MicIcon, PlusIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MemoRelation } from "@/api/types";
 import { LinkMemoDialog, LocationDialog } from "@/components/MemoMetadata";
@@ -22,11 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-  useDropdownMenuSubHoverDelay,
 } from "@/components/ui/dropdown-menu";
 import { useDebouncedEffect } from "@/hooks";
 import { useTranslate } from "@/utils/i18n";
@@ -39,16 +24,10 @@ const InsertMenu = (props: InsertMenuProps) => {
   const t = useTranslate();
   const { actions, dispatch } = useEditorContext();
   const relations = useEditorSelector((s) => s.metadata.relations);
-  const { location: initialLocation, onLocationChange, onToggleFocusMode, isUploading: isUploadingProp } = props;
+  const { location: initialLocation, onLocationChange, isUploading: isUploadingProp } = props;
 
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
-  const [moreSubmenuOpen, setMoreSubmenuOpen] = useState(false);
-
-  const { handleTriggerEnter, handleTriggerLeave, handleContentEnter, handleContentLeave } = useDropdownMenuSubHoverDelay(
-    150,
-    setMoreSubmenuOpen,
-  );
 
   const { fileInputRef, selectingFlag, handleFileInputChange, handleUploadClick } = useFileUpload((newFiles: LocalFile[]) => {
     newFiles.forEach((file) => dispatch(actions.addLocalFile(file)));
@@ -128,11 +107,6 @@ const InsertMenu = (props: InsertMenuProps) => {
     setLocationDialogOpen(false);
   }, [locationReset]);
 
-  const handleToggleFocusMode = useCallback(() => {
-    onToggleFocusMode?.();
-    setMoreSubmenuOpen(false);
-  }, [onToggleFocusMode]);
-
   const handleMediaUploadClick = useCallback(() => {
     handleUploadClick("image/*,video/*");
   }, [handleUploadClick]);
@@ -200,20 +174,6 @@ const InsertMenu = (props: InsertMenuProps) => {
               {item.label}
             </DropdownMenuItem>
           ))}
-          <DropdownMenuSeparator />
-          {/* View submenu with Focus Mode + editor display mode */}
-          <DropdownMenuSub open={moreSubmenuOpen} onOpenChange={setMoreSubmenuOpen}>
-            <DropdownMenuSubTrigger onPointerEnter={handleTriggerEnter} onPointerLeave={handleTriggerLeave}>
-              <MoreHorizontalIcon className="w-4 h-4" />
-              {t("common.more")}
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent onPointerEnter={handleContentEnter} onPointerLeave={handleContentLeave}>
-              <DropdownMenuItem onClick={handleToggleFocusMode}>
-                <Maximize2Icon className="w-4 h-4" />
-                {t("editor.focus-mode")}
-              </DropdownMenuItem>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
         </DropdownMenuContent>
       </DropdownMenu>
 

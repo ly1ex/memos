@@ -8,7 +8,14 @@ import type { EditorToolbarProps } from "../types";
 import InsertMenu from "./InsertMenu";
 import VisibilitySelector from "./VisibilitySelector";
 
-export const EditorToolbar: FC<EditorToolbarProps> = ({ onSave, onCancel, memoName, onAudioRecorderClick }) => {
+export const EditorToolbar: FC<EditorToolbarProps> = ({
+  onSave,
+  onCancel,
+  memoName,
+  onAudioRecorderClick,
+  visibilityOptions,
+  showVisibilitySelector = true,
+}) => {
   const t = useTranslate();
   const { actions, dispatch } = useEditorContext();
   // Subscribe to narrow/derived slices so typing (which only changes content)
@@ -43,7 +50,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({ onSave, onCancel, memoNa
           memoName={memoName}
           onAudioRecorderClick={onAudioRecorderClick}
         />
-        <VisibilitySelector value={visibility} onChange={handleVisibilityChange} />
+        {showVisibilitySelector && <VisibilitySelector value={visibility} onChange={handleVisibilityChange} options={visibilityOptions} />}
       </div>
 
       <div className="flex flex-row justify-end items-center gap-2">

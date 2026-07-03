@@ -6,8 +6,10 @@ export interface MemoViewProps {
   showCreator?: boolean;
   showVisibility?: boolean;
   showPinned?: boolean;
+  showEngagement?: boolean;
   className?: string;
   parentPage?: string;
+  disableDetailNavigation?: boolean;
   shareImageDialogOpen?: boolean;
   onShareImageDialogOpenChange?: (open: boolean) => void;
 }
@@ -20,4 +22,5 @@ export interface MemoHeaderProps {
 
 export interface MemoBodyProps {
   compact?: boolean;
+  showReactions?: boolean;
 }

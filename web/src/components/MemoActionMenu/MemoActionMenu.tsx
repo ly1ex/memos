@@ -4,9 +4,7 @@ import {
   BookmarkMinusIcon,
   BookmarkPlusIcon,
   CheckCheckIcon,
-  CopyIcon,
   Edit3Icon,
-  FileTextIcon,
   LinkIcon,
   ListChecksIcon,
   ListRestartIcon,
@@ -52,7 +50,6 @@ const MemoActionMenu = (props: MemoActionMenuProps) => {
     handleEditMemoClick,
     handleToggleMemoStatusClick,
     handleCopyLink,
-    handleCopyContent,
     handleCheckAllTaskListItemsClick,
     handleUncheckAllTaskListItemsClick,
     handleDeleteMemoClick,
@@ -87,24 +84,12 @@ const MemoActionMenu = (props: MemoActionMenuProps) => {
           </>
         )}
 
-        {/* Copy submenu (non-archived) */}
+        {/* Link copy (non-archived) */}
         {!isArchived && (
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              <CopyIcon className="w-4 h-auto" />
-              {t("common.copy")}
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuItem onClick={handleCopyLink}>
-                <LinkIcon className="w-4 h-auto" />
-                {t("memo.copy-link")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleCopyContent}>
-                <FileTextIcon className="w-4 h-auto" />
-                {t("memo.copy-content")}
-              </DropdownMenuItem>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
+          <DropdownMenuItem onClick={handleCopyLink}>
+            <LinkIcon className="w-4 h-auto" />
+            {t("memo.copy-link")}
+          </DropdownMenuItem>
         )}
 
         {/* Task submenu (writable task memos) */}

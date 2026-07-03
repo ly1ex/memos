@@ -32,6 +32,10 @@ function buildUpdateMask(
     mask.add("visibility");
     patch.visibility = state.metadata.visibility;
   }
+  if (!isEqual(state.metadata.entryType, prevMemo.entryType)) {
+    mask.add("entryType");
+    patch.entryType = state.metadata.entryType;
+  }
   if (!isEqual(allAttachments, prevMemo.attachments)) {
     mask.add("attachments");
     patch.attachments = toAttachmentReferences(allAttachments);
@@ -101,6 +105,7 @@ export const memoService = {
     const memoData = createMessage(MemoSchema, {
       content: state.content,
       visibility: state.metadata.visibility,
+      entryType: state.metadata.entryType,
       attachments: toAttachmentReferences(allAttachments),
       relations: state.metadata.relations,
       location: state.metadata.location,
@@ -128,6 +133,7 @@ export const memoService = {
       content: memo.content,
       metadata: {
         visibility: memo.visibility,
+        entryType: memo.entryType ?? "MEMO",
         attachments: memo.attachments,
         relations: memo.relations,
         location: memo.location,

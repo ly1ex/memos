@@ -5,13 +5,13 @@ compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
 [vars]
-CORS_ORIGINS = "http://localhost:3001,http://localhost:8787"
-CLERK_AUTHORIZED_PARTIES = "http://localhost:3001,http://localhost:8787"
+CORS_ORIGINS = "http://localhost:3001,http://localhost:8787,https://memos-cloudflare-c1r.pages.dev,https://memos-cloudflare-worker.lyle.workers.dev"
+CLERK_AUTHORIZED_PARTIES = "http://localhost:3001,http://localhost:8787,https://memos-cloudflare-c1r.pages.dev,https://memos-cloudflare-worker.lyle.workers.dev"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "memos-cloudflare"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "ac02cc31-448f-46e9-9fe8-f0edd5bbb7a1"
 migrations_dir = "migrations"
 
 [[r2_buckets]]

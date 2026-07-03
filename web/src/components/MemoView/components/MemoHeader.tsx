@@ -1,8 +1,10 @@
+import { useUser as useClerkUser } from "@clerk/react";
 import { BookmarkIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import type { User } from "@/api/types";
 import { Visibility } from "@/api/types";
+import { isClerkEnabled } from "@/clerk-auth";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNewMemo } from "@/contexts/NewMemoContext";
 import useNavigateTo from "@/hooks/useNavigateTo";
@@ -32,6 +34,8 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, sh
   }, [memo.name, parentPage, navigateTo]);
 
   const { unpinMemo } = useMemoActions(memo);
+  const entryTypeLabel =
+    memo.entryType === "COMMUNITY" ? t("lumina.community") : memo.entryType === "DIARY" ? t("lumina.diary") : t("common.memo");
 
   const timeValue = isArchived ? (
     memoDisplayTime?.toLocaleString(i18n.language)
@@ -54,10 +58,17 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, sh
   };
 
   return (
-    <div className="w-full flex flex-row justify-between items-center gap-2">
-      <div className="w-auto max-w-[calc(100%-8rem)] grow flex flex-row justify-start items-center">
+    <div className="memo-header w-full flex flex-row justify-between items-center gap-2">
+      <div className="memo-header-main w-auto max-w-[calc(100%-8rem)] grow flex flex-row justify-start items-center">
         {showCreator && creator ? (
-          <CreatorDisplay creator={creator} displayTime={displayTime} timeTooltip={timeTooltip} onGotoDetail={handleGotoMemoDetailPage} />
+          <CreatorDisplay
+            creator={creator}
+            displayTime={displayTime}
+            entryTypeLabel={entryTypeLabel}
+            timeTooltip={timeTooltip}
+            onGotoDetail={handleGotoMemoDetailPage}
+            isCurrentUser={creator.name === currentUser?.name}
+          />
         ) : (
           <TimeDisplay displayTime={displayTime} timeTooltip={timeTooltip} onGotoDetail={handleGotoMemoDetailPage} />
         )}
@@ -68,7 +79,7 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, sh
         )}
       </div>
 
-      <div className="flex flex-row justify-end items-center select-none shrink-0 gap-2">
+      <div className="memo-header-actions flex flex-row justify-end items-center select-none shrink-0 gap-2">
         {currentUser && !isArchived && (
           <ReactionSelector
             className={cn("border-none w-auto h-auto", reactionSelectorOpen && "block!", "block sm:hidden sm:group-hover:block")}
@@ -114,34 +125,57 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, sh
 interface CreatorDisplayProps {
   creator: User;
   displayTime: React.ReactNode;
+  entryTypeLabel: string;
   timeTooltip: TimeTooltipContent;
   onGotoDetail: () => void;
+  isCurrentUser: boolean;
 }
 
-const CreatorDisplay: React.FC<CreatorDisplayProps> = ({ creator, displayTime, timeTooltip, onGotoDetail }) => (
-  <div className="w-full flex flex-row justify-start items-center">
+const CreatorDisplay: React.FC<CreatorDisplayProps> = ({
+  creator,
+  displayTime,
+  entryTypeLabel,
+  timeTooltip,
+  onGotoDetail,
+  isCurrentUser,
+}) => (
+  <div className="memo-creator-display w-full flex flex-row justify-start items-center">
     <Link className="w-auto hover:opacity-80 rounded-md transition-colors" to={`/u/${encodeURIComponent(creator.username)}`} viewTransition>
-      <UserAvatar className="mr-2 shrink-0" avatarUrl={creator.avatarUrl} />
+      <CreatorAvatar creator={creator} isCurrentUser={isCurrentUser} />
     </Link>
     <div className="w-full flex flex-col justify-center items-start">
       <Link
-        className="block leading-tight hover:opacity-80 rounded-md transition-colors truncate text-muted-foreground"
+        className="memo-creator-name block leading-tight hover:opacity-80 rounded-md transition-colors truncate text-muted-foreground"
         to={`/u/${encodeURIComponent(creator.username)}`}
         viewTransition
       >
-        {creator.displayName || creator.username}
+        @{creator.username}
       </Link>
       <TimeTooltip content={timeTooltip}>
         <span
-          className="w-auto -mt-0.5 text-xs leading-tight text-muted-foreground select-none cursor-pointer hover:opacity-80 transition-colors text-left"
+          className="memo-creator-meta w-auto -mt-0.5 text-xs leading-tight text-muted-foreground select-none cursor-pointer hover:opacity-80 transition-colors text-left"
           onClick={onGotoDetail}
         >
-          {displayTime}
+          {displayTime} <span aria-hidden="true">·</span> {entryTypeLabel}
         </span>
       </TimeTooltip>
     </div>
   </div>
 );
+
+const ClerkCreatorAvatar = ({ fallbackAvatarUrl }: { fallbackAvatarUrl?: string }) => {
+  const { user } = useClerkUser();
+
+  return <UserAvatar className="memo-creator-avatar mr-2 shrink-0" avatarUrl={user?.imageUrl || fallbackAvatarUrl} />;
+};
+
+const CreatorAvatar = ({ creator, isCurrentUser }: { creator: User; isCurrentUser: boolean }) => {
+  if (isCurrentUser && isClerkEnabled) {
+    return <ClerkCreatorAvatar fallbackAvatarUrl={creator.avatarUrl} />;
+  }
+
+  return <UserAvatar className="memo-creator-avatar mr-2 shrink-0" avatarUrl={creator.avatarUrl} />;
+};
 
 interface TimeTooltipContent {
   createdAt?: string;

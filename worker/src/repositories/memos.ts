@@ -1,4 +1,4 @@
-import { buildMemoPayload } from "../domain/memo-payload";
+import { buildMemoPayload, parseMemoEntryType, type MemoEntryType } from "../domain/memo-payload";
 import { HttpError } from "../http/errors";
 import { decodeCreatedCursor, pageFromLimit, type CursorPage } from "./cursor";
 import { nowTs } from "../utils/time";
@@ -14,6 +14,7 @@ export interface Memo {
   creatorUsername?: string;
   content: string;
   visibility: MemoVisibility;
+  entryType: MemoEntryType;
   rowStatus: MemoRowStatus;
   pinned: boolean;
   payload: unknown;
@@ -40,12 +41,14 @@ export interface CreateMemoInput {
   creatorId: number;
   content: string;
   visibility: MemoVisibility;
+  entryType?: MemoEntryType;
 }
 
 export interface UpdateMemoInput {
   content?: string;
   visibility?: MemoVisibility;
   pinned?: boolean;
+  entryType?: MemoEntryType;
 }
 
 export interface ListMemosInput {
@@ -58,6 +61,8 @@ export interface ListVisibleMemosInput {
   viewerId?: number;
   pageSize: number;
   cursor?: string | null;
+  space?: "PRIVATE" | "COMMUNITY" | null;
+  entryType?: MemoEntryType | null;
 }
 
 export interface ListPublicMemosInput {
@@ -85,7 +90,8 @@ export async function createMemo(db: D1Database, input: CreateMemoInput): Promis
   validateMemoContent(input.content);
   const now = nowTs();
   const uid = validateMemoUid(input.uid) ?? createUid("memo");
-  const payloadJson = JSON.stringify(buildMemoPayload(input.content));
+  const entryType = input.entryType ?? "MEMO";
+  const payloadJson = JSON.stringify(buildMemoPayload(input.content, entryType));
   const row = await db
     .prepare(
       `
@@ -151,14 +157,30 @@ export async function listMemos(db: D1Database, input: ListMemosInput): Promise<
 
 export async function listVisibleMemos(db: D1Database, input: ListVisibleMemosInput): Promise<CursorPage<Memo>> {
   const cursor = decodeCreatedCursor(input.cursor ?? null);
-  const where = ["row_status = 'NORMAL'"];
+  const where = ["row_status = 'NORMAL'", "id NOT IN (SELECT related_memo_id FROM memo_relation WHERE type = 'COMMENT')"];
   const bindings: unknown[] = [];
 
-  if (input.viewerId === undefined) {
+  if (input.space === "COMMUNITY") {
+    where.push("visibility = 'PUBLIC'");
+    where.push("COALESCE(json_extract(payload_json, '$.entryType'), 'MEMO') = 'COMMUNITY'");
+  } else if (input.space === "PRIVATE") {
+    if (input.viewerId === undefined) {
+      where.push("1 = 0");
+    } else {
+      where.push("creator_id = ?");
+      where.push("COALESCE(json_extract(payload_json, '$.entryType'), 'MEMO') IN ('MEMO', 'DIARY')");
+      bindings.push(input.viewerId);
+    }
+  } else if (input.viewerId === undefined) {
     where.push("visibility = 'PUBLIC'");
   } else {
     where.push("(creator_id = ? OR visibility IN ('PUBLIC', 'PROTECTED'))");
     bindings.push(input.viewerId);
+  }
+
+  if (input.entryType) {
+    where.push("COALESCE(json_extract(payload_json, '$.entryType'), 'MEMO') = ?");
+    bindings.push(input.entryType);
   }
 
   if (cursor) {
@@ -220,13 +242,17 @@ export async function getMemoByUid(db: D1Database, uid: string): Promise<Memo | 
 export async function updateMemo(db: D1Database, id: number, input: UpdateMemoInput): Promise<Memo | null> {
   const assignments: string[] = [];
   const bindings: unknown[] = [];
+  const existingMemo = input.content !== undefined || input.entryType !== undefined ? await getMemoById(db, id) : null;
 
   if (input.content !== undefined) {
     validateMemoContent(input.content);
     assignments.push("content = ?");
     bindings.push(input.content);
     assignments.push("payload_json = ?");
-    bindings.push(JSON.stringify(buildMemoPayload(input.content)));
+    bindings.push(JSON.stringify(buildMemoPayload(input.content, input.entryType ?? existingMemo?.entryType ?? "MEMO")));
+  } else if (input.entryType !== undefined) {
+    assignments.push("payload_json = ?");
+    bindings.push(JSON.stringify(buildMemoPayload(existingMemo?.content ?? "", input.entryType)));
   }
 
   if (input.visibility !== undefined) {
@@ -333,6 +359,7 @@ function toMemo(row: MemoRow): Memo {
     creatorUsername: row.creatorUsername ?? undefined,
     content: row.content,
     visibility: row.visibility,
+    entryType: parseEntryType(row.payloadJson),
     rowStatus: row.rowStatus,
     pinned: row.pinned === 1,
     payload: parsePayload(row.payloadJson),
@@ -347,4 +374,12 @@ function parsePayload(value: string): unknown {
   } catch (_error) {
     return {};
   }
+}
+
+function parseEntryType(value: string): MemoEntryType {
+  const payload = parsePayload(value);
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return "MEMO";
+  }
+  return parseMemoEntryType((payload as Record<string, unknown>).entryType);
 }
