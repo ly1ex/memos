@@ -10,8 +10,10 @@ import "./index.css";
 import { refreshAccessToken } from "@/api/client";
 import { ClerkAuthProvider, useFrontendAuthState } from "@/clerk-auth";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { LiquidGlassFilters } from "@/components/LiquidGlass";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { InstanceProvider, useInstance } from "@/contexts/InstanceContext";
+import { NewMemoProvider } from "@/contexts/NewMemoContext";
 import { ViewProvider } from "@/contexts/ViewContext";
 import { useLiveMemoRefresh } from "@/hooks/useLiveMemoRefresh";
 import { useTokenRefreshOnFocus } from "@/hooks/useTokenRefreshOnFocus";
@@ -78,10 +80,13 @@ function Main() {
           <InstanceProvider>
             <AuthProvider>
               <ViewProvider>
-                <AppInitializer>
-                  <RouterProvider router={router} />
-                  <Toaster position="top-right" />
-                </AppInitializer>
+                <NewMemoProvider>
+                  <AppInitializer>
+                    <LiquidGlassFilters />
+                    <RouterProvider router={router} />
+                    <Toaster position="top-right" />
+                  </AppInitializer>
+                </NewMemoProvider>
               </ViewProvider>
             </AuthProvider>
           </InstanceProvider>

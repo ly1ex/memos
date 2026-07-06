@@ -94,7 +94,7 @@ const ProfileHeader = ({
   <div className="lumina-profile-card">
     <div className="flex flex-col items-center text-center">
       <ProfileAvatar user={user} isOwnProfile={isOwnProfile} />
-      <h1 className="mt-5 text-3xl font-semibold text-foreground">{user.displayName || user.username}</h1>
+      <h1 className="mt-5 text-3xl font-semibold text-foreground">{user.displayName || user.displayUsername || user.username}</h1>
       <p className="mt-1 font-mono text-sm uppercase text-muted-foreground">{roleLabel}</p>
       {user.description && <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">{user.description}</p>}
       <div className="lumina-profile-actions">
@@ -158,6 +158,7 @@ const UserProfile = () => {
   const { data: user, isLoading, error } = useUser(`users/${username}`, { enabled: !!username });
   const { data: userStats } = useUserStats(user?.name);
   const isOwnProfile = Boolean(user && currentUser && user.name === currentUser.name);
+  const profileUser = isOwnProfile && currentUser ? currentUser : user;
   const profileSpace = isOwnProfile ? space : "community";
 
   if (error && !isLoading) {
@@ -176,8 +177,8 @@ const UserProfile = () => {
   });
 
   const handleCopyProfileLink = () => {
-    if (!user) return;
-    copy(`${window.location.origin}/u/${encodeURIComponent(user.username)}`);
+    if (!profileUser) return;
+    copy(`${window.location.origin}/u/${encodeURIComponent(profileUser.username)}`);
     toast.success(t("message.copied"));
   };
 
@@ -185,10 +186,10 @@ const UserProfile = () => {
 
   return (
     <section className="lumina-page lumina-profile-page">
-      {user ? (
+      {profileUser ? (
         <>
           <ProfileHeader
-            user={user}
+            user={profileUser}
             totalMemoCount={userStats?.totalMemoCount ?? 0}
             dayStreak={computeDayStreak(userStats?.memoCreatedTimestamps)}
             isOwnProfile={isOwnProfile}

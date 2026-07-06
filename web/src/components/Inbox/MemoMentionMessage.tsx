@@ -95,7 +95,9 @@ function MemoMentionMessage({ notification }: Props) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-3 mb-1">
             <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-              <span className="font-semibold text-sm text-foreground/95">{sender?.displayName || sender?.username}</span>
+              <span className="font-semibold text-sm text-foreground/95">
+                {sender?.displayName || sender?.displayUsername || sender?.username}
+              </span>
               <span className="text-sm text-muted-foreground/80">mentioned you {isCommentMention ? "in a comment" : "in a memo"}</span>
               <span className="text-xs text-muted-foreground/60">
                 {notification.createTime &&

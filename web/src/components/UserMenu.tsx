@@ -108,7 +108,7 @@ const UserMenu = (props: Props) => {
           </div>
           {!collapsed && (
             <span className="ml-2 text-lg font-medium text-foreground grow truncate">
-              {currentUser?.displayName || currentUser?.username}
+              {currentUser?.displayName || currentUser?.displayUsername || currentUser?.username}
             </span>
           )}
         </div>

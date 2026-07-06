@@ -173,6 +173,80 @@
     transform: scale(0.98);
   }
 
+  .lumina-liquid-glass-filters {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .lumina-liquid-glass {
+    --liquid-radius: 1rem;
+    --liquid-blur: 22px;
+    --liquid-x: 50%;
+    --liquid-y: 50%;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: var(--liquid-radius);
+    transform: translateZ(0);
+  }
+
+  .lumina-liquid-glass > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .lumina-liquid-glass::before {
+    position: absolute;
+    inset: -1px;
+    z-index: 0;
+    pointer-events: none;
+    content: "";
+    border-radius: inherit;
+    background:
+      radial-gradient(circle at var(--liquid-x) var(--liquid-y), rgba(255, 255, 255, 0.54), transparent 34%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.46), transparent 36%), color-mix(in srgb, var(--lumina-glass-bg) 92%, transparent);
+    filter: url("#lumina-liquid-glass-refraction");
+    backdrop-filter: blur(var(--liquid-blur)) saturate(155%) contrast(1.04);
+    -webkit-backdrop-filter: blur(var(--liquid-blur)) saturate(155%) contrast(1.04);
+  }
+
+  .lumina-liquid-glass::after {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: "";
+    border: 1px solid color-mix(in srgb, var(--lumina-glass-border) 76%, rgba(255, 255, 255, 0.64));
+    border-radius: inherit;
+    background:
+      radial-gradient(circle at var(--liquid-x) var(--liquid-y), rgba(255, 255, 255, 0.38), transparent 22%),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.34), transparent 28%),
+      linear-gradient(315deg, color-mix(in srgb, var(--lumina-space-accent) 9%, transparent), transparent 34%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.62),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.18),
+      inset 1px 0 0 rgba(255, 255, 255, 0.14),
+      0 14px 38px rgba(23, 23, 28, 0.08);
+    mix-blend-mode: normal;
+  }
+
+  [data-theme="default-dark"] .lumina-liquid-glass::before {
+    background:
+      radial-gradient(circle at var(--liquid-x) var(--liquid-y), rgba(255, 255, 255, 0.16), transparent 34%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 36%), color-mix(in srgb, var(--lumina-glass-bg) 94%, transparent);
+  }
+
+  [data-theme="default-dark"] .lumina-liquid-glass::after {
+    border-color: color-mix(in srgb, var(--lumina-glass-border) 82%, rgba(255, 255, 255, 0.18));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+      0 18px 46px rgba(0, 0, 0, 0.28);
+  }
+
   .lumina-main {
     position: relative;
     z-index: 1;
@@ -316,7 +390,13 @@
 
   .lumina-search-dialog {
     width: min(calc(100% - 2rem), 34rem) !important;
-    padding: 0.6rem !important;
+    --liquid-radius: 1.1rem;
+    --liquid-blur: 26px;
+    border: 1px solid var(--lumina-glass-border) !important;
+    border-radius: 1.1rem !important;
+    background: color-mix(in srgb, var(--lumina-glass-bg) 92%, transparent) !important;
+    padding: 0.7rem !important;
+    box-shadow: var(--lumina-panel-shadow) !important;
   }
 
   .lumina-search-dialog > div {
@@ -324,19 +404,23 @@
   }
 
   .lumina-search-form {
-    display: flex;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
     min-height: 3.25rem;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
     border: 1px solid var(--lumina-glass-border);
-    border-radius: 0.65rem;
-    background: color-mix(in srgb, var(--lumina-surface-lowest) 78%, transparent);
-    padding: 0 0.55rem 0 0.9rem;
-    box-shadow: var(--lumina-refractive-edge);
+    border-radius: 0.85rem;
+    background: color-mix(in srgb, var(--lumina-surface-lowest) 64%, transparent);
+    padding: 0.3rem 0.45rem 0.3rem 0.9rem;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.42),
+      inset 0 -1px 0 color-mix(in srgb, var(--lumina-space-accent) 10%, transparent);
   }
 
   .lumina-search-input {
     height: 2.75rem !important;
+    min-width: 0;
     border: 0 !important;
     background: transparent !important;
     padding: 0 !important;
@@ -358,7 +442,7 @@
   .lumina-search-submit {
     height: 2.25rem !important;
     border-radius: 999px !important;
-    background: var(--lumina-primary) !important;
+    background: color-mix(in srgb, var(--lumina-primary) 92%, var(--lumina-space-accent)) !important;
     color: var(--lumina-on-primary) !important;
     font-family: var(--lumina-font-mono);
     font-size: 0.78rem !important;
@@ -367,43 +451,79 @@
 
   .lumina-inline-search {
     position: relative;
-    display: flex;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto auto;
     width: 100%;
-    min-height: 2.5rem;
+    min-height: 2.75rem;
     align-items: center;
+    gap: 0.5rem;
+    --liquid-radius: 999px;
+    --liquid-blur: 18px;
+    border: 1px solid var(--lumina-glass-border);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--lumina-glass-bg) 86%, transparent);
+    padding: 0.24rem 0.38rem 0.24rem 0.85rem;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.42),
+      0 10px 24px rgba(23, 23, 28, 0.05);
   }
 
   .lumina-inline-search-input {
+    min-width: 0;
     width: 100%;
     height: 2.5rem;
-    border: 1px solid var(--lumina-glass-border);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--lumina-surface-lowest) 72%, transparent);
-    padding: 0 2.5rem 0 2.25rem;
+    border: 0;
+    background: transparent;
+    padding: 0;
     color: var(--lumina-ink);
     font-size: 0.95rem;
     line-height: 1;
     outline: 0;
-    box-shadow: var(--lumina-refractive-edge);
   }
 
   .lumina-inline-search-input::placeholder {
     color: var(--lumina-muted);
   }
 
-  .lumina-inline-search-input:focus {
+  .lumina-inline-search:focus-within {
     border-color: var(--lumina-focus);
     box-shadow:
-      var(--lumina-refractive-edge),
+      inset 0 1px 0 rgba(255, 255, 255, 0.52),
       0 0 0 2px color-mix(in srgb, var(--lumina-focus) 18%, transparent);
   }
 
-  .lumina-inline-search-menu {
-    position: absolute;
-    top: 50%;
-    right: 0.65rem;
-    transform: translateY(-50%);
+  .lumina-inline-search-icon {
+    width: 1rem;
+    height: 1rem;
     color: var(--lumina-muted);
+    stroke-width: 2;
+  }
+
+  .lumina-inline-search-clear,
+  .lumina-inline-search-menu {
+    display: inline-flex;
+    width: 2rem;
+    height: 2rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    color: var(--lumina-muted);
+    transition:
+      background-color 150ms ease,
+      color 150ms ease,
+      opacity 150ms ease;
+  }
+
+  .lumina-inline-search-clear:hover,
+  .lumina-inline-search-menu:hover {
+    background: color-mix(in srgb, var(--lumina-surface-low) 72%, transparent);
+    color: var(--lumina-ink);
+  }
+
+  .lumina-inline-search-divider {
+    width: 1px;
+    height: 1.35rem;
+    background: color-mix(in srgb, var(--lumina-hairline) 82%, transparent);
   }
 
   .lumina-avatar-trigger {
@@ -563,13 +683,15 @@
   }
 
   .lumina-editor {
+    --liquid-radius: 1.35rem;
+    --liquid-blur: 24px;
     min-height: 0;
     border: 1px solid var(--lumina-glass-border) !important;
     border-radius: 1.35rem !important;
-    background: color-mix(in srgb, var(--lumina-surface-lowest) 82%, transparent) !important;
+    background: color-mix(in srgb, var(--lumina-glass-bg) 82%, transparent) !important;
     padding: 1.75rem;
-    box-shadow: var(--lumina-refractive-edge);
-    backdrop-filter: blur(20px);
+    box-shadow: var(--lumina-panel-shadow);
+    backdrop-filter: blur(22px);
   }
 
   .lumina-app-shell[data-lumina-space="community"] .lumina-editor {
@@ -598,14 +720,82 @@
   }
 
   .lumina-post-button {
+    --liquid-radius: 999px;
+    --liquid-blur: 14px;
     min-width: 5.5rem;
     height: 2.45rem;
+    border: 1px solid color-mix(in srgb, var(--lumina-space-accent) 24%, var(--lumina-glass-border)) !important;
     border-radius: 999px !important;
-    background: var(--lumina-space-accent) !important;
+    background: color-mix(in srgb, var(--lumina-space-accent) 92%, transparent) !important;
     color: var(--lumina-on-primary) !important;
     font-family: var(--lumina-font-mono);
     font-size: 0.82rem;
     font-weight: 700;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      0 10px 22px rgba(23, 23, 28, 0.1);
+  }
+
+  .lumina-compose-page {
+    width: min(100%, 56rem);
+    padding-top: 1.25rem;
+  }
+
+  .lumina-compose-shell {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .lumina-compose-header {
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr) 2.25rem;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .lumina-compose-header h1 {
+    overflow: hidden;
+    color: var(--lumina-ink);
+    font-family: var(--lumina-font-body);
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lumina-compose-back {
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+    border: 1px solid var(--lumina-glass-border) !important;
+    border-radius: 999px !important;
+    background: color-mix(in srgb, var(--lumina-glass-bg) 80%, transparent) !important;
+    color: var(--lumina-ink) !important;
+    backdrop-filter: blur(18px);
+  }
+
+  .lumina-compose-editor {
+    min-height: min(34rem, calc(100svh - 10rem));
+  }
+
+  .lumina-compose-editor .memo-editor-content .cm-content {
+    min-height: min(20rem, calc(100svh - 20rem));
+  }
+
+  .lumina-placeholder {
+    color: var(--lumina-muted);
+  }
+
+  .lumina-placeholder-icon {
+    --liquid-radius: 999px;
+    --liquid-blur: 18px;
+    display: grid;
+    width: 4.5rem;
+    height: 4.5rem;
+    place-items: center;
+    color: var(--lumina-space-accent);
   }
 
   .lumina-post-button:hover {
@@ -1409,10 +1599,22 @@
     width: 3.5rem;
     align-items: center;
     justify-content: center;
+    --liquid-radius: 999px;
+    --liquid-blur: 18px;
+    border: 1px solid color-mix(in srgb, var(--lumina-space-accent) 18%, var(--lumina-glass-border));
     border-radius: 999px;
-    background: var(--lumina-space-accent);
+    background: color-mix(in srgb, var(--lumina-space-accent) 88%, transparent);
     color: var(--lumina-on-primary);
-    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.12);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 14px 28px rgba(0, 0, 0, 0.12);
+    transition:
+      transform 160ms ease,
+      box-shadow 160ms ease;
+  }
+
+  .lumina-mobile-compose-fab:active {
+    transform: scale(0.96);
   }
 
   @media (max-width: 767px) {
@@ -1466,6 +1668,26 @@
 
     .lumina-editor {
       padding: 1rem;
+    }
+
+    .lumina-compose-page {
+      min-height: calc(100svh - 1rem);
+      padding: 1rem 1rem 7rem;
+    }
+
+    .lumina-compose-shell {
+      min-height: calc(100svh - 8rem);
+    }
+
+    .lumina-compose-editor {
+      flex: 1;
+      min-height: calc(100svh - 11rem);
+      padding: 1rem !important;
+      border-radius: 1.2rem !important;
+    }
+
+    .lumina-compose-editor .memo-editor-content .cm-content {
+      min-height: calc(100svh - 24rem);
     }
 
     .lumina-editor .memo-editor-content .cm-editor,

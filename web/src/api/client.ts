@@ -257,9 +257,11 @@ function shortcutPath(name: string): { username: string; shortcutId: string } {
 function normalizeUser(raw: unknown): User {
   const record = isRecord(raw) ? raw : {};
   return createMessage(UserSchema, {
+    clerkUserId: asString(record.clerkUserId),
     name: asString(record.name) || `users/${asString(record.username)}`,
     role: userRoleFrom(record.role),
     username: asString(record.username) || resourceId(asString(record.name), "users"),
+    displayUsername: asString(record.displayUsername),
     email: asString(record.email),
     displayName: asString(record.displayName) || asString(record.nickname),
     avatarUrl: asString(record.avatarUrl),

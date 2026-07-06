@@ -74,8 +74,8 @@ const Setting = () => {
       <div className="lumina-settings-identity setting-surface">
         <SettingAvatar avatarUrl={user?.avatarUrl} />
         <div className="min-w-0">
-          <p className="truncate text-xl font-medium text-foreground">{user?.displayName || user?.username}</p>
-          <p className="truncate font-mono text-sm text-muted-foreground">@{user?.username}</p>
+          <p className="truncate text-xl font-medium text-foreground">{user?.displayName || user?.displayUsername || user?.username}</p>
+          <p className="truncate font-mono text-sm text-muted-foreground">@{user?.displayUsername || user?.username}</p>
         </div>
         <span className="lumina-role-pill ml-auto shrink-0">{isHost ? t("common.admin") : t("lumina.member")}</span>
       </div>

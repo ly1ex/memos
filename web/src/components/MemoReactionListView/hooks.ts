@@ -133,7 +133,7 @@ export const useReactionActions = ({ memo, onComplete }: UseReactionActionsOptio
 
 export const formatReactionTooltip = (users: User[], reactionType: string): string => {
   if (users.length === 0) return "";
-  const formatUserName = (user: User) => user.displayName || user.username;
+  const formatUserName = (user: User) => user.displayName || user.displayUsername || user.username;
   if (users.length < 5) {
     return `${users.map(formatUserName).join(", ")} reacted with ${reactionType.toLowerCase()}`;
   }

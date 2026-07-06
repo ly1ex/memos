@@ -73,7 +73,7 @@ const LuminaSearchDialog = ({ open, onOpenChange }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="lumina-search-dialog" showCloseButton={false}>
+      <DialogContent className="lumina-search-dialog lumina-liquid-glass" showCloseButton={false}>
         <DialogHeader className="sr-only">
           <DialogTitle>{t("common.search")}</DialogTitle>
         </DialogHeader>

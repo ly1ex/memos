@@ -5,6 +5,7 @@ import { userName } from "../utils/resource-names";
 
 export interface UserResponse {
   id: number;
+  clerkUserId: string;
   name: string;
   username: string;
   email: string;
@@ -24,6 +25,7 @@ export function toUserResponse(user: LocalUser, viewer?: AuthContext | null): Us
   const canReadEmail = viewer ? canReadOwnedResource(viewer.localUser, user.id) : false;
   return {
     id: user.id,
+    clerkUserId: user.clerkUserId,
     name: userName(user.username),
     username: user.username,
     email: canReadEmail ? user.email : "",

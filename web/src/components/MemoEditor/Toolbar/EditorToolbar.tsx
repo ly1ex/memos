@@ -60,7 +60,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
           </Button>
         )}
 
-        <Button className={!memoName ? "lumina-post-button" : undefined} onClick={onSave} disabled={!valid || isSaving}>
+        <Button className={!memoName ? "lumina-post-button lumina-liquid-glass" : undefined} onClick={onSave} disabled={!valid || isSaving}>
           {isSaving ? t("editor.saving") : memoName ? t("editor.save") : t("lumina.post")}
         </Button>
       </div>

@@ -6,6 +6,7 @@ export const ROUTES = {
   ARCHIVED: "/archived",
   SHORTCUTS: "/shortcuts",
   SETTING: "/setting",
+  COMPOSE: "/compose",
   EXPLORE: "/explore",
   AUTH: "/auth",
   SHARED_MEMO: "/memos/shares",

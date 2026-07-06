@@ -82,7 +82,7 @@ const PreviewMeta = ({
   memoName?: string;
   showMemoId?: boolean;
 }) => {
-  const creatorName = creator?.displayName || creator?.username;
+  const creatorName = creator?.displayName || creator?.displayUsername || creator?.username;
   const memoId = showMemoId && memoName ? extractMemoIdFromName(memoName).slice(0, 6) : undefined;
 
   if (!creatorName && !memoId) {

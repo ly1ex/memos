@@ -1,8 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { createContext, type ReactNode, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { authApi, shortcutApi, userApi } from "@/api/client";
 import { ApiError, ApiErrorCode } from "@/api/errors";
 import type { Shortcut, User, UserSetting_GeneralSetting, UserSetting_TagsSetting, UserSetting_WebhooksSetting } from "@/api/types";
+import { type ClerkProfileData, isClerkEnabled, useClerkProfile } from "@/clerk-auth";
 import { userKeys } from "@/hooks/useUserQueries";
 
 interface AuthState {
@@ -24,8 +25,32 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function applyClerkProfile(user: User, profile: ClerkProfileData | null): User {
+  if (!isClerkEnabled || !profile) {
+    return user;
+  }
+
+  return {
+    ...user,
+    email: profile.email,
+    displayName: profile.displayName,
+    displayUsername: profile.username || user.username,
+    avatarUrl: profile.avatarUrl,
+  };
+}
+
+function hasSameClerkBackedProfile(left: User, right: User): boolean {
+  return (
+    left.email === right.email &&
+    left.displayName === right.displayName &&
+    left.displayUsername === right.displayUsername &&
+    left.avatarUrl === right.avatarUrl
+  );
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+  const clerkProfile = useClerkProfile();
   const initializeRequestRef = useRef(0);
   const [state, setState] = useState<AuthState>({
     currentUser: undefined,
@@ -60,9 +85,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, isLoading: true }));
 
     try {
-      const { user: currentUser } = await authApi.getCurrentUser({});
+      const { user: localCurrentUser } = await authApi.getCurrentUser({});
 
-      if (!currentUser) {
+      if (!localCurrentUser) {
         if (requestId !== initializeRequestRef.current) return;
         setState({
           currentUser: undefined,
@@ -76,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      const currentUser = applyClerkProfile(localCurrentUser, clerkProfile);
       const settings = await fetchUserSettings(currentUser.name);
 
       if (requestId !== initializeRequestRef.current) return;
@@ -104,7 +130,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading: false,
       });
     }
-  }, [fetchUserSettings, queryClient]);
+  }, [clerkProfile, fetchUserSettings, queryClient]);
+
+  useEffect(() => {
+    if (!isClerkEnabled || !clerkProfile) {
+      return;
+    }
+
+    setState((prev) => {
+      if (!prev.currentUser) {
+        return prev;
+      }
+
+      const nextCurrentUser = applyClerkProfile(prev.currentUser, clerkProfile);
+      if (hasSameClerkBackedProfile(prev.currentUser, nextCurrentUser)) {
+        return prev;
+      }
+
+      queryClient.setQueryData(userKeys.currentUser(), nextCurrentUser);
+      queryClient.setQueryData(userKeys.detail(nextCurrentUser.name), nextCurrentUser);
+      return { ...prev, currentUser: nextCurrentUser };
+    });
+  }, [clerkProfile, queryClient]);
 
   const logout = useCallback(async () => {
     initializeRequestRef.current += 1;
@@ -145,10 +192,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const setCurrentUser = useCallback(
     (user: User | undefined) => {
       const previousUser = queryClient.getQueryData<User>(userKeys.currentUser());
-      setState((prev) => ({ ...prev, currentUser: user }));
-      if (user) {
-        queryClient.setQueryData(userKeys.currentUser(), user);
-        queryClient.setQueryData(userKeys.detail(user.name), user);
+      const nextUser = user ? applyClerkProfile(user, clerkProfile) : undefined;
+      setState((prev) => ({ ...prev, currentUser: nextUser }));
+      if (nextUser) {
+        queryClient.setQueryData(userKeys.currentUser(), nextUser);
+        queryClient.setQueryData(userKeys.detail(nextUser.name), nextUser);
       } else {
         queryClient.removeQueries({ queryKey: userKeys.currentUser(), exact: true });
         if (previousUser?.name) {
@@ -156,7 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [queryClient],
+    [clerkProfile, queryClient],
   );
 
   // Memoize context value to prevent unnecessary re-renders of consumers

@@ -282,9 +282,11 @@ export type Shortcut = {
 };
 
 export type User = {
+  clerkUserId?: string;
   name: string;
   role: User_Role;
   username: string;
+  displayUsername?: string;
   email: string;
   displayName: string;
   avatarUrl: string;

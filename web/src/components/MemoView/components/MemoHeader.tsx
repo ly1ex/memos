@@ -138,30 +138,38 @@ const CreatorDisplay: React.FC<CreatorDisplayProps> = ({
   timeTooltip,
   onGotoDetail,
   isCurrentUser,
-}) => (
-  <div className="memo-creator-display w-full flex flex-row justify-start items-center">
-    <Link className="w-auto hover:opacity-80 rounded-md transition-colors" to={`/u/${encodeURIComponent(creator.username)}`} viewTransition>
-      <CreatorAvatar creator={creator} isCurrentUser={isCurrentUser} />
-    </Link>
-    <div className="w-full flex flex-col justify-center items-start">
+}) => {
+  const displayUsername = creator.displayUsername || creator.username;
+
+  return (
+    <div className="memo-creator-display w-full flex flex-row justify-start items-center">
       <Link
-        className="memo-creator-name block leading-tight hover:opacity-80 rounded-md transition-colors truncate text-muted-foreground"
+        className="w-auto hover:opacity-80 rounded-md transition-colors"
         to={`/u/${encodeURIComponent(creator.username)}`}
         viewTransition
       >
-        @{creator.username}
+        <CreatorAvatar creator={creator} isCurrentUser={isCurrentUser} />
       </Link>
-      <TimeTooltip content={timeTooltip}>
-        <span
-          className="memo-creator-meta w-auto -mt-0.5 text-xs leading-tight text-muted-foreground select-none cursor-pointer hover:opacity-80 transition-colors text-left"
-          onClick={onGotoDetail}
+      <div className="w-full flex flex-col justify-center items-start">
+        <Link
+          className="memo-creator-name block leading-tight hover:opacity-80 rounded-md transition-colors truncate text-muted-foreground"
+          to={`/u/${encodeURIComponent(creator.username)}`}
+          viewTransition
         >
-          {displayTime} <span aria-hidden="true">·</span> {entryTypeLabel}
-        </span>
-      </TimeTooltip>
+          @{displayUsername}
+        </Link>
+        <TimeTooltip content={timeTooltip}>
+          <span
+            className="memo-creator-meta w-auto -mt-0.5 text-xs leading-tight text-muted-foreground select-none cursor-pointer hover:opacity-80 transition-colors text-left"
+            onClick={onGotoDetail}
+          >
+            {displayTime} <span aria-hidden="true">·</span> {entryTypeLabel}
+          </span>
+        </TimeTooltip>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const ClerkCreatorAvatar = ({ fallbackAvatarUrl }: { fallbackAvatarUrl?: string }) => {
   const { user } = useClerkUser();

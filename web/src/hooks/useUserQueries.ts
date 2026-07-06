@@ -34,12 +34,15 @@ export const userKeys = {
 };
 
 export function useUser(name: string, options?: { enabled?: boolean }) {
+  const currentUser = useCurrentUser();
+
   return useQuery({
     queryKey: userKeys.detail(name),
     queryFn: async () => {
       const user = await userApi.getUser({ name });
       return user;
     },
+    select: (user) => (currentUser?.name === user.name ? currentUser : user),
     enabled: options?.enabled ?? true,
     staleTime: 1000 * 60 * 5, // 5 minutes - user profiles don't change often
   });
@@ -207,12 +210,15 @@ export function useUpdateUserSetting() {
 
 // Hook to list all users
 export function useListUsers() {
+  const currentUser = useCurrentUser();
+
   return useQuery({
     queryKey: userKeys.all,
     queryFn: async () => {
       const { users } = await userApi.listUsers({});
       return users;
     },
+    select: (users) => users.map((user) => (currentUser?.name === user.name ? currentUser : user)),
   });
 }
 
@@ -249,6 +255,7 @@ export function useUpdateUserGeneralSetting(currentUserName?: string) {
 
 // Hook to fetch multiple users by names (returns Map<name, User>)
 export function useUsersByNames(names: string[]) {
+  const currentUser = useCurrentUser();
   const enabled = names.length > 0;
   const uniqueNames = Array.from(new Set(names));
 
@@ -273,12 +280,21 @@ export function useUsersByNames(names: string[]) {
       return userMap;
     },
     enabled,
+    select: (userMap) => {
+      if (!currentUser?.name || !userMap.has(currentUser.name)) {
+        return userMap;
+      }
+      const nextUserMap = new Map(userMap);
+      nextUserMap.set(currentUser.name, currentUser);
+      return nextUserMap;
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes - user profiles don't change often
   });
 }
 
 // Hook to fetch multiple users by usernames (returns Map<username, User>)
 export function useUsersByUsernames(usernames: string[], options?: { enabled?: boolean }) {
+  const currentUser = useCurrentUser();
   const enabled = (options?.enabled ?? true) && usernames.length > 0;
   const uniqueUsernames = Array.from(new Set(usernames));
 
@@ -300,6 +316,14 @@ export function useUsersByUsernames(usernames: string[], options?: { enabled?: b
       return userMap;
     },
     enabled,
+    select: (userMap) => {
+      if (!currentUser?.username || !userMap.has(currentUser.username)) {
+        return userMap;
+      }
+      const nextUserMap = new Map(userMap);
+      nextUserMap.set(currentUser.username, currentUser);
+      return nextUserMap;
+    },
     staleTime: 1000 * 60 * 5,
   });
 }

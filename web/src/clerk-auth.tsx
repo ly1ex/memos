@@ -1,5 +1,5 @@
-import { ClerkProvider, SignIn, SignUp, useAuth as useClerkAuth } from "@clerk/react";
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import { ClerkProvider, SignIn, SignUp, useAuth as useClerkAuth, useUser as useClerkUser } from "@clerk/react";
+import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
 
 type TokenProvider = () => Promise<string | null>;
 type SignOutProvider = () => Promise<void>;
@@ -10,6 +10,14 @@ let signOutProvider: SignOutProvider | null = null;
 interface FrontendAuthState {
   ready: boolean;
   sessionKey: string;
+}
+
+export interface ClerkProfileData {
+  id: string;
+  email: string;
+  displayName: string;
+  avatarUrl: string;
+  username: string;
 }
 
 const disabledAuthState: FrontendAuthState = {
@@ -23,6 +31,7 @@ const loadingAuthState: FrontendAuthState = {
 };
 
 const FrontendAuthContext = createContext<FrontendAuthState>(disabledAuthState);
+const ClerkProfileContext = createContext<ClerkProfileData | null>(null);
 
 export const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
 export const isClerkEnabled = Boolean(clerkPublishableKey);
@@ -53,9 +62,31 @@ export function useFrontendAuthState(): FrontendAuthState {
   return useContext(FrontendAuthContext);
 }
 
+export function useClerkProfile(): ClerkProfileData | null {
+  return useContext(ClerkProfileContext);
+}
+
 function ClerkBridge({ children }: { children: ReactNode }) {
   const { getToken, isLoaded, isSignedIn, sessionId, signOut } = useClerkAuth();
+  const { user } = useClerkUser();
   const [authState, setAuthState] = useState<FrontendAuthState>(loadingAuthState);
+  const profile = useMemo<ClerkProfileData | null>(() => {
+    if (!isLoaded || !isSignedIn || !user) {
+      return null;
+    }
+
+    const email = user.primaryEmailAddress?.emailAddress || user.emailAddresses[0]?.emailAddress || "";
+    const displayName =
+      user.fullName || user.username || [user.firstName, user.lastName].filter(Boolean).join(" ") || (email ? email.split("@")[0] : "");
+
+    return {
+      id: user.id,
+      email,
+      displayName,
+      avatarUrl: user.imageUrl || "",
+      username: user.username || "",
+    };
+  }, [isLoaded, isSignedIn, user]);
 
   useEffect(() => {
     if (!isLoaded) {
@@ -79,12 +110,20 @@ function ClerkBridge({ children }: { children: ReactNode }) {
     };
   }, [getToken, isLoaded, isSignedIn, sessionId, signOut]);
 
-  return <FrontendAuthContext.Provider value={authState}>{children}</FrontendAuthContext.Provider>;
+  return (
+    <FrontendAuthContext.Provider value={authState}>
+      <ClerkProfileContext.Provider value={profile}>{children}</ClerkProfileContext.Provider>
+    </FrontendAuthContext.Provider>
+  );
 }
 
 export function ClerkAuthProvider({ children }: { children: ReactNode }) {
   if (!clerkPublishableKey) {
-    return <FrontendAuthContext.Provider value={disabledAuthState}>{children}</FrontendAuthContext.Provider>;
+    return (
+      <FrontendAuthContext.Provider value={disabledAuthState}>
+        <ClerkProfileContext.Provider value={null}>{children}</ClerkProfileContext.Provider>
+      </FrontendAuthContext.Provider>
+    );
   }
 
   return (

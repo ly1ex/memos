@@ -132,7 +132,7 @@ const MemberSection = () => {
                     </span>
                     {currentUser?.name === user.name ? <span className="text-xs text-muted-foreground">{t("common.yourself")}</span> : null}
                   </div>
-                  <span className="truncate text-xs text-muted-foreground">@{user.username}</span>
+                  <span className="truncate text-xs text-muted-foreground">@{user.displayUsername || user.username}</span>
                 </div>
               </div>
             ),
