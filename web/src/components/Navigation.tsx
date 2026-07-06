@@ -1,5 +1,5 @@
-import { BellIcon, CompassIcon, HomeIcon, InfoIcon, SettingsIcon, UserRoundIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import { BellIcon, CompassIcon, HomeIcon, SettingsIcon, UserRoundIcon } from "lucide-react";
+import type { PointerEvent, ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { UserNotification_Status } from "@/api/types";
 import { useSpace } from "@/contexts/SpaceContext";
@@ -83,12 +83,6 @@ const Navigation = ({ className }: Props) => {
       icon: <CompassIcon className="size-5" />,
     },
     {
-      id: "navigation-about",
-      path: Routes.ABOUT,
-      title: t("common.about"),
-      icon: <InfoIcon className="size-5" />,
-    },
-    {
       id: "navigation-sign-in",
       path: Routes.AUTH,
       title: t("common.sign-in"),
@@ -98,8 +92,24 @@ const Navigation = ({ className }: Props) => {
 
   const items = currentUser ? authenticatedItems : guestItems;
 
+  const handleLiquidPointerMove = (event: PointerEvent<HTMLElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    event.currentTarget.style.setProperty("--liquid-x", `${((event.clientX - rect.left) / rect.width) * 100}%`);
+    event.currentTarget.style.setProperty("--liquid-y", `${((event.clientY - rect.top) / rect.height) * 100}%`);
+  };
+
+  const handleLiquidPointerLeave = (event: PointerEvent<HTMLElement>) => {
+    event.currentTarget.style.setProperty("--liquid-x", "50%");
+    event.currentTarget.style.setProperty("--liquid-y", "50%");
+  };
+
   return (
-    <nav className={cn("lumina-bottom-nav", className)} aria-label={t("lumina.primary-navigation")}>
+    <nav
+      className={cn("lumina-bottom-nav lumina-liquid-glass", className)}
+      aria-label={t("lumina.primary-navigation")}
+      onPointerMove={handleLiquidPointerMove}
+      onPointerLeave={handleLiquidPointerLeave}
+    >
       {items.map((item) => (
         <NavLink
           key={item.id}

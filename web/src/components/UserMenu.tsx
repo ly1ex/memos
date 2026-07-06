@@ -3,7 +3,6 @@ import {
   ArchiveIcon,
   CheckIcon,
   GlobeIcon,
-  InfoIcon,
   LogOutIcon,
   PaletteIcon,
   SettingsIcon,
@@ -123,10 +122,6 @@ const UserMenu = (props: Props) => {
         <DropdownMenuItem onClick={() => navigateTo(Routes.ARCHIVED)}>
           <ArchiveIcon className="size-4 text-muted-foreground" />
           {t("common.archived")}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigateTo(Routes.ABOUT)}>
-          <InfoIcon className="size-4 text-muted-foreground" />
-          {t("common.about")}
         </DropdownMenuItem>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>

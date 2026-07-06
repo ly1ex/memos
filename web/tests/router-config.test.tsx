@@ -60,7 +60,7 @@ describe("router configuration", () => {
   });
 
   it("leaves public pages outside RequireAuthRoute", () => {
-    for (const path of [ROUTES.ABOUT, ROUTES.EXPLORE, "memos/:uid", "memos/shares/:token", "u/:username"]) {
+    for (const path of [ROUTES.EXPLORE, "memos/:uid", "memos/shares/:token", "u/:username"]) {
       expect(hasAncestorOfType(routeConfig, path, RequireAuthRoute)).toBe(false);
     }
   });
